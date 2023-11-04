@@ -19,6 +19,11 @@ void Printer::operator()() const
         if(const auto newLine = line.find('\n'); newLine != std::string::npos && newLine != 0)
         {
             line = mContent.substr(begin, newLine + 1);
+            std::cout << line;
+        }
+        else
+        {
+            std::cout << line << "\n";
         }
 
         // TODO: If a line doesn't end in whitespace, I want to find the last instance of whitespace
@@ -36,7 +41,5 @@ void Printer::operator()() const
         // looks bad.
 
         begin += line.size();
-
-        std::cout << line << "\n";
     }
 }
