@@ -7,7 +7,7 @@
 
 class HtmlContent
 {
-  public:
+public:
     HtmlContent(const std::string& content, const std::string& begin, const std::string& end,
                 bool deep = false);
     ~HtmlContent() noexcept = default;
@@ -31,7 +31,7 @@ class HtmlContent
     HtmlContent operator()(const std::string& begin, const std::string& end,
                            bool deep = false) const;
 
-  private:
+private:
     // TODO: Use std::string_view?
     std::string mContent;
 };

@@ -4,13 +4,13 @@
 
 class Printer
 {
-  public:
+public:
     Printer(const std::string& content, size_t width);
     ~Printer() noexcept = default;
 
     void operator()() const;
 
-  private:
+private:
     std::string mContent;
     size_t mWidth;
 };

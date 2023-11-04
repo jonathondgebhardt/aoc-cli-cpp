@@ -16,7 +16,7 @@ void Printer::operator()() const
 
         // New line characters needs to be considered: if a new line is in the line, change `begin`
         // to just after the new line and continue.
-        if(const auto newLine = line.find("\n"); newLine != std::string::npos && newLine != 0)
+        if(const auto newLine = line.find('\n'); newLine != std::string::npos && newLine != 0)
         {
             line = mContent.substr(begin, newLine + 1);
         }
