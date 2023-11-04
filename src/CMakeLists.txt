@@ -5,12 +5,14 @@ project(aoc-cli)
 set(HEADERS
     HttpsRequest.hpp
     HtmlContent.hpp
+    Printer.hpp
 )
 
 set(SOURCES
     HttpsRequest.cpp
     main.cpp
     HtmlContent.cpp
+    Printer.cpp
 )
 
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})

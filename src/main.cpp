@@ -6,6 +6,7 @@
 #include "ArgParser.hpp"
 #include "HtmlContent.hpp"
 #include "HttpsRequest.hpp"
+#include "Printer.hpp"
 
 // Shamelessly stolen in lieu of writing my own parser
 // https://stackoverflow.com/a/868894
@@ -47,6 +48,7 @@ void Read(const std::string& year, const std::string& day)
     if(const auto content = request())
     {
         // TODO: Make the title of the day prompt stand out by adding a newline
+        // TODO: There's a rogue "</codE>" in here...
         auto hc = HtmlContent{*content, "<main>", "</main>"};
         hc.excludeTags("<article.*?>", "</article>", "<h2.*?>", "</h2>", "<p>", "</p>",
                        "<pre><code>", "</code></pre>", "<ul>", "</ul>", "<li>", "</li>", "<code>",
@@ -55,7 +57,7 @@ void Read(const std::string& year, const std::string& day)
 
         // TODO: Format <em>content</em> in a special way to make it stand out?
 
-        std::cout << hc() << "\n";
+        Printer(hc(), 80)();
     }
 }
 
