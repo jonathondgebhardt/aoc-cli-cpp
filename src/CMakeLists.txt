@@ -6,6 +6,7 @@ set(HEADERS
     HttpsRequest.hpp
     HtmlContent.hpp
     Printer.hpp
+    HtmlFormatter.hpp
 )
 
 set(SOURCES
@@ -13,6 +14,7 @@ set(SOURCES
     main.cpp
     HtmlContent.cpp
     Printer.cpp
+    HtmlFormatter.cpp
 )
 
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})

@@ -17,5 +17,5 @@ IndentAccessModifiers: false
 AccessModifierOffset: -4
 FixNamespaceComments: false
 AlignOperands: Align
-AlwaysBreakTemplateDeclarations: true
+AlwaysBreakTemplateDeclarations: Yes
 ...
