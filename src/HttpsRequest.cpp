@@ -1,20 +1,15 @@
 #include "HttpsRequest.hpp"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 namespace
 {
     std::optional<std::string> GetCookie()
     {
-//        const auto sessionFile = config::GetInputFilePath() + "/.adventofcode.session";
-//        if(const auto sessions = util::Parse(sessionFile); !sessions.empty())
-//        {
-//            return "session=" + sessions.front();
-//        }
-
+        // TODO: Don't hard code this
         const auto sessionFile = ".adventofcode.session";
-        std::ifstream ifs{sessionFile};;
+        std::ifstream ifs{sessionFile};
         if(ifs.is_open())
         {
             std::string line;
