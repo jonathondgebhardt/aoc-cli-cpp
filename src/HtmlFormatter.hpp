@@ -31,6 +31,7 @@ private:
         size_t mBeginPos = std::string::npos;
 
     private:
+
         // TODO: Add a single fire option? (i.e., extractor is only used once)
 
         std::string mContent;

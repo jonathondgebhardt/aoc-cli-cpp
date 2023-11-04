@@ -5,8 +5,18 @@
 
 HtmlFormatter::HtmlFormatter(const HtmlContent& content) : mContent(content)
 {
+    // TODO: There's a rogue "</codE>" in here...
     mExtractors.emplace_back("<h2>", "</h2>");
     mExtractors.emplace_back("<p>", "</p>");
+    mExtractors.emplace_back("<pre><code>", "</code></pre>");
+    //    mExtractors.emplace_back("<code>", "</code>");
+    //    mExtractors.emplace_back("<em>", "</em>");
+
+    // FIXME: Extractors don't use regex
+    mExtractors.emplace_back("<a href.*?>", "</a>");
+
+    // TODO: Need to handle <li> and </li> specifically
+    mExtractors.emplace_back("<li>", "</li>");
 }
 
 std::string HtmlFormatter::operator()()
@@ -33,7 +43,10 @@ std::string HtmlFormatter::operator()()
         if(first != mExtractors.end() && first->mBeginPos != std::string::npos)
         {
             std::cout << (*first)() << "\n\n";
+
+            // FIXME: Printer doesn't like
             //            ss << (*first)() << "\n\n";
+
             content = content.substr(first->mBeginPos);
             it = first->mBeginPos;
         }
@@ -44,8 +57,15 @@ std::string HtmlFormatter::operator()()
 
 size_t HtmlFormatter::Extractor::extract(const std::string& content)
 {
+    // Reset to avoid false positives
+    mBeginPos = std::string::npos;
+    mLength = std::string::npos;
+
     mContent = content;
+
+    // TODO: Use regex :(
     mBeginPos = content.find(mBegin);
+
     if(mBeginPos != std::string::npos)
     {
         mBeginPos += mBegin.size();

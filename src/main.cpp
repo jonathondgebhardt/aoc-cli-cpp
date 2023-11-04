@@ -54,13 +54,7 @@ void Read(const std::string& year, const std::string& day)
     request.setContentType("text/html");
     if(const auto content = request())
     {
-        // TODO: There's a rogue "</codE>" in here...
         HtmlContent hc{*content, "<main>", "</main>"};
-        //        hc.excludeTags("<article.*?>", "</article>", "<h2.*?>", "</h2>", "<pre>",
-        //        "</pre>", "<ul>",
-        //                       "</ul>", "<code>", "</code>", "<em.*?>", "</em>", "<a href.*?>",
-        //                       "</a>",
-        //                       "<span.*?>", "</span>", "<p class.*?>");
         HtmlFormatter formatter{hc};
 
         Printer(formatter(), 120)();
