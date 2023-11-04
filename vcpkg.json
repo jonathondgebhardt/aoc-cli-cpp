@@ -1,0 +1,6 @@
+{
+  "name": "aoc-cli-cpp",
+  "dependencies": [
+    "curl"
+  ]
+}
