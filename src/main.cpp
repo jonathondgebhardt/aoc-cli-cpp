@@ -53,17 +53,15 @@ void Read(const std::string& year, const std::string& day)
     request.setContentType("text/html");
     if(const auto content = request())
     {
-        // TODO: Make the title of the day prompt stand out by adding a newline
         // TODO: There's a rogue "</codE>" in here...
         auto hc = HtmlContent{*content, "<main>", "</main>"};
-        hc.excludeTags("<article.*?>", "</article>", "<h2.*?>", "</h2>", "<p>", "</p>",
-                       "<pre><code>", "</code></pre>", "<ul>", "</ul>", "<li>", "</li>", "<code>",
-                       "</code>", "<em.*?>", "</em>", "<a href.*?>", "</a>", "<span.*?>", "</span>",
-                       "<p class.*?>");
+        //        hc.excludeTags("<article.*?>", "</article>", "<h2.*?>", "</h2>", "<pre>",
+        //        "</pre>", "<ul>",
+        //                       "</ul>", "<code>", "</code>", "<em.*?>", "</em>", "<a href.*?>",
+        //                       "</a>",
+        //                       "<span.*?>", "</span>", "<p class.*?>");
 
-        // TODO: Format <em>content</em> in a special way to make it stand out?
-
-        Printer(hc(), 80)();
+        Printer(hc(), 120)();
     }
 }
 
