@@ -48,15 +48,10 @@ void Read(const std::string& year, const std::string& day)
     {
         // TODO: Make the title of the day prompt stand out by adding a newline
         auto hc = HtmlContent{*content, "<main>", "</main>"};
-        //        hc.excludeTags(/*"<article.*\">", */ "</article>", "<h2.*>", "</h2>", "<p>",
-        //        "</p>",
-        //                       "<pre><code>", "</code></pre>", "<ul>", "</ul>", "<li>", "</li>",
-        //                       "<code>",
-        //                       "</code>", "<em.*>", "</em>", "<a href.*>", "</a>", "<span.*>",
-        //                       "</span>");
-        hc.excludeTags("</article>", "<h2>", "</h2>", "<p>", "</p>", "<pre><code>", "</code></pre>",
-                       "<ul>", "</ul>", "<li>", "</li>", "<code>", "</code>", "<em>", "</em>",
-                       "</a>", "</span>");
+        hc.excludeTags("<article.*?>", "</article>", "<h2.*?>", "</h2>", "<p>", "</p>",
+                       "<pre><code>", "</code></pre>", "<ul>", "</ul>", "<li>", "</li>", "<code>",
+                       "</code>", "<em.*?>", "</em>", "<a href.*?>", "</a>", "<span.*?>", "</span>",
+                       "<p class.*?>");
 
         // TODO: Format <em>content</em> in a special way to make it stand out?
 
