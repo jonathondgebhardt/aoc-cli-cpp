@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstdlib>
+#include <cxxopts.hpp>
 #include <iostream>
 #include <vector>
 
@@ -7,38 +8,6 @@
 #include "HtmlContent.hpp"
 #include "HttpsRequest.hpp"
 #include "Printer.hpp"
-
-// Shamelessly stolen in lieu of writing my own parser
-// https://stackoverflow.com/a/868894
-class InputParser
-{
-  public:
-    InputParser(int& argc, char** argv)
-    {
-        for(int i = 1; i < argc; ++i)
-            this->tokens.push_back(std::string(argv[i]));
-    }
-    /// @author iain
-    const std::string& getCmdOption(const std::string& option) const
-    {
-        std::vector<std::string>::const_iterator itr;
-        itr = std::find(this->tokens.begin(), this->tokens.end(), option);
-        if(itr != this->tokens.end() && ++itr != this->tokens.end())
-        {
-            return *itr;
-        }
-        static const std::string empty_string("");
-        return empty_string;
-    }
-    /// @author iain
-    bool cmdOptionExists(const std::string& option) const
-    {
-        return std::find(this->tokens.begin(), this->tokens.end(), option) != this->tokens.end();
-    }
-
-  private:
-    std::vector<std::string> tokens;
-};
 
 void Read(const std::string& year, const std::string& day)
 {
@@ -86,13 +55,22 @@ void Read(const std::string& year, const std::string& day)
 
 int main(int argc, char** argv)
 {
-    InputParser ip{argc, argv};
+    cxxopts::Options options{"aoc-cli", ""};
 
-    if(ip.cmdOptionExists("read"))
+    // clang-format off
+    options.add_options()
+        ("r,read", "Read puzzle statement (the default command)", cxxopts::value<bool>()->default_value("true"))
+        ("y,year", "Puzzle year [default: year of current or last Advent of Code event]", cxxopts::value<std::string>())
+        ("d,day", "Puzzle day [default: last unlocked day (during Advent of Code month)]", cxxopts::value<std::string>())
+        ;
+    // clang-format on
+
+    const auto result = options.parse(argc, argv);
+    const auto year = result["year"].as<std::string>();
+    const auto day = result["day"].as<std::string>();
+
+    if(result["read"].as<bool>())
     {
-        const auto year = ip.getCmdOption("-y");
-        const auto day = ip.getCmdOption("-d");
-
         if(!year.empty() && !day.empty())
         {
             Read(year, day);

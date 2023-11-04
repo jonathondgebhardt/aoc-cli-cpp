@@ -18,4 +18,5 @@ set(SOURCES
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 find_package(CURL CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE PRIVATE CURL::libcurl)
+find_package(cxxopts CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE PRIVATE CURL::libcurl cxxopts::cxxopts)
