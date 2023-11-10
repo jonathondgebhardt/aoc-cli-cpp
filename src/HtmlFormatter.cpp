@@ -10,57 +10,59 @@ namespace
         return reinterpret_cast<const char*>(xc);
     }
 
-    void PrintTextNodes(xmlNodePtr node)
+    void ExtractTextNodes(xmlNodePtr node, std::stringstream& ss)
     {
         if(!node)
         {
             return;
         }
 
-        if(node->name && GetStringFromXmlChar(node->name) == "h2")
+        const auto isHeading =
+            node->parent && node->parent->name && GetStringFromXmlChar(node->parent->name) == "h2";
+        if(isHeading)
         {
-            std::cout << "\n";
-        }
-
-        auto addNewLine = node->children != nullptr;
-
-        if(node->parent && node->parent->name)
-        {
-            std::string name = GetStringFromXmlChar(node->parent->name);
-            addNewLine |= name == "h2";
+            ss << "\n";
         }
 
         if(node->type == XML_TEXT_NODE)
         {
-            std::cout << node->content;
-
-            if(addNewLine)
+            // Close, but not quite:
+            // clang-format off
+            //  - The first Elf is carrying food with 1000 - , 2000 - , and 3000 -  Calories, a total of 6000 -  Calories.
+            // clang-format on
+            // Maybe I need to check the parent's parent?!?!?
+            if(node->parent && node->parent->name &&
+               GetStringFromXmlChar(node->parent->name) == "li")
             {
-                std::cout << "\n";
+                ss << " - ";
+            }
+
+            ss << node->content;
+
+            if(node->children != nullptr)
+            {
+                ss << "\n\n";
+            }
+
+            if(isHeading)
+            {
+                ss << "\n\n";
             }
         }
 
-        PrintTextNodes(node->children);
-        PrintTextNodes(node->next);
+        ExtractTextNodes(node->children, ss);
+        ExtractTextNodes(node->next, ss);
     }
-
 }
 
-HtmlFormatter::HtmlFormatter(const HtmlContent& content) : mContent(content)
+HtmlFormatter::HtmlFormatter(const HtmlContent& content)
 {
-    const auto& htmlContent = content();
-    const auto doc = htmlReadMemory(htmlContent.c_str(), htmlContent.size(), "", nullptr,
+    const auto& contentStr = content();
+    const auto doc = htmlReadMemory(contentStr.c_str(), contentStr.size(), "", nullptr,
                                     XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
     if(doc)
     {
-        // root
-        //  "html" (XML_DTD_NODE), _"html" (XML_ELEMENT_NODE)_
-        //      "body" (XML_ELEMENT_NODE)
-        //          "article" (XML_ELEMENT_NODE)
-        //              "h2" (XML_ELEMENT_NODE)
-        //                  "text" (XML_TEXT_NODE) -> "--- Day 1: Calorie Counting---"
-
-        PrintTextNodes(reinterpret_cast<xmlNodePtr>(doc));
+        ExtractTextNodes(reinterpret_cast<xmlNodePtr>(doc), mStream);
 
         xmlFreeDoc(doc);
     }
@@ -68,5 +70,5 @@ HtmlFormatter::HtmlFormatter(const HtmlContent& content) : mContent(content)
 
 std::string HtmlFormatter::operator()() const
 {
-    return {};
+    return mStream.str();
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HtmlContent.hpp"
+#include <sstream>
 
 //! Extracts specific content from HtmlContent and formats it.
 class HtmlFormatter
@@ -12,5 +13,5 @@ public:
     std::string operator()() const;
 
 private:
-    HtmlContent mContent;
+    std::stringstream mStream;
 };
