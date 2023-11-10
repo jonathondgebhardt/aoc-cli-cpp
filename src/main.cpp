@@ -2,6 +2,7 @@
 #include <cxxopts.hpp>
 
 #include "HtmlContent.hpp"
+#include "HtmlFormatter.hpp"
 #include "HttpsRequest.hpp"
 #include "Printer.hpp"
 
@@ -19,12 +20,12 @@ cxxopts::ParseResult GetArgs(int argc, char** argv)
     //
     // Options:
     //-d, --day <DAY>            Puzzle day [default: last unlocked day (during Advent of Code
-    //month)] -y, --year <YEAR>          Puzzle year [default: year of current or last Advent of
-    //Code event] -s, --session-file <PATH>  Path to session cookie file [default:
+    // month)] -y, --year <YEAR>          Puzzle year [default: year of current or last Advent of
+    // Code event] -s, --session-file <PATH>  Path to session cookie file [default:
     //~/.adventofcode.session] -w, --width <WIDTH>        Width at which to wrap output [default:
-    //terminal width] -o, --overwrite            Overwrite files if they already exist -I,
+    // terminal width] -o, --overwrite            Overwrite files if they already exist -I,
     //--input-only           Download puzzle input only -P, --puzzle-only          Download puzzle
-    //description only -i, --input-file <PATH>    Path where to save puzzle input [default: input]
+    // description only -i, --input-file <PATH>    Path where to save puzzle input [default: input]
     //-p, --puzzle-file <PATH>   Path where to save puzzle description [default: puzzle.md]
     //-q, --quiet                Restrict log messages to errors only
     //--debug                Enable debug logging
@@ -54,14 +55,15 @@ void Read(const std::string& year, const std::string& day)
     if(const auto content = request())
     {
         // TODO: There's a rogue "</codE>" in here...
-        auto hc = HtmlContent{*content, "<main>", "</main>"};
+        //        auto hc = HtmlContent{*content, "<main>", "</main>"};
         //        hc.excludeTags("<article.*?>", "</article>", "<h2.*?>", "</h2>", "<pre>",
         //        "</pre>", "<ul>",
         //                       "</ul>", "<code>", "</code>", "<em.*?>", "</em>", "<a href.*?>",
         //                       "</a>",
         //                       "<span.*?>", "</span>", "<p class.*?>");
 
-        Printer(hc(), 120)();
+        HtmlFormatter(HtmlContent{*content, "<main>", "</main>"});
+        //        Printer(hc(), 120)();
     }
 }
 
