@@ -2,6 +2,7 @@
   "name": "aoc-cli-cpp",
   "dependencies": [
     "curl",
-    "cxxopts"
+    "cxxopts",
+    "libxml2"
   ]
 }

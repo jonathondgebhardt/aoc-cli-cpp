@@ -1,73 +1,69 @@
 #include "HtmlFormatter.hpp"
 
 #include <iostream>
-#include <regex>
+#include <libxml/HTMLparser.h>
 
 namespace
 {
-    enum ContentType
+    std::string GetStringFromXmlChar(const xmlChar* xc)
     {
-        Heading = 0, // h*
-        Paragraph,   // p
-        List         // li
-    };
+        return reinterpret_cast<const char*>(xc);
+    }
 
-    using Content = std::pair<ContentType, std::string>;
+    void PrintTextNodes(xmlNodePtr node)
+    {
+        if(!node)
+        {
+            return;
+        }
+
+        if(node->name && GetStringFromXmlChar(node->name) == "h2")
+        {
+            std::cout << "\n";
+        }
+
+        auto addNewLine = node->children != nullptr;
+
+        if(node->parent && node->parent->name)
+        {
+            std::string name = GetStringFromXmlChar(node->parent->name);
+            addNewLine |= name == "h2";
+        }
+
+        if(node->type == XML_TEXT_NODE)
+        {
+            std::cout << node->content;
+
+            if(addNewLine)
+            {
+                std::cout << "\n";
+            }
+        }
+
+        PrintTextNodes(node->children);
+        PrintTextNodes(node->next);
+    }
+
 }
 
 HtmlFormatter::HtmlFormatter(const HtmlContent& content) : mContent(content)
 {
-    // associate content type with content
-    // ex:
-    // Paragraph,
-    // heading (<h*>), --- Day 1: Calorie Counting ---
-    // paragraph (<p>), Santa's reindeer typically eat regular reindeer food
-    // this content is removed but the order is maintained.
-    //
-    // Here's the blessed regex to match any <.*>: <\w*\s*\w*[^\/]>*?
-    // This doesn't match everything, but I think it'll suit our purposes.
-    //
-    // Any content within the content we want should lose it's tags. Ex:
-    // <p>i'm some text with <em>a special thing</em>!!!</p>
-    //
-    // Or I could grab all the text between > and < ...
+    const auto& htmlContent = content();
+    const auto doc = htmlReadMemory(htmlContent.c_str(), htmlContent.size(), "", nullptr,
+                                    XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
+    if(doc)
+    {
+        // root
+        //  "html" (XML_DTD_NODE), _"html" (XML_ELEMENT_NODE)_
+        //      "body" (XML_ELEMENT_NODE)
+        //          "article" (XML_ELEMENT_NODE)
+        //              "h2" (XML_ELEMENT_NODE)
+        //                  "text" (XML_TEXT_NODE) -> "--- Day 1: Calorie Counting---"
 
-//    const std::regex re{">.*?<"};
-//    std::smatch match;
-//    const std::string& htmlContent = content();
-//    if(std::regex_match(htmlContent, match, re))
-//    {
-//        std::cout << match[1] << "\n";
-//    }
-//
-//    if(std::regex_search(htmlContent, match, re))
-//    {
-//        for(size_t i = 0; i < match.size(); ++i)
-//        {
-//            std::cout << i << ": " << match[i] << "\n";
-//        }
-//    }
+        PrintTextNodes(reinterpret_cast<xmlNodePtr>(doc));
 
-    const std::string fnames[] = {"foo.txt", "bar.txt", "baz.dat", "zoidberg"};
-    const std::regex txt_regex("[a-z]+\\.txt");
-
-    for (const auto& fname : fnames)
-        std::cout << fname << ": " << std::regex_match(fname, txt_regex) << '\n';
-
-    // Extraction of a sub-match
-    const std::regex base_regex("([a-z]+)\\.txt");
-    std::smatch base_match;
-
-    for (const auto& fname : fnames)
-        if (std::regex_match(fname, base_match, base_regex))
-            // The first sub_match is the whole string; the next
-            // sub_match is the first parenthesized expression.
-            if (base_match.size() == 2)
-            {
-                std::ssub_match base_sub_match = base_match[1];
-                std::string base = base_sub_match.str();
-                std::cout << fname << " has a base of " << base << '\n';
-            }
+        xmlFreeDoc(doc);
+    }
 }
 
 std::string HtmlFormatter::operator()() const

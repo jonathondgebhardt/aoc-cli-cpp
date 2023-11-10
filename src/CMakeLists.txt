@@ -21,4 +21,5 @@ add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 find_package(CURL CONFIG REQUIRED)
 find_package(cxxopts CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE PRIVATE CURL::libcurl cxxopts::cxxopts)
+find_package(LibXml2 CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE PRIVATE CURL::libcurl cxxopts::cxxopts LibXml2::LibXml2)
