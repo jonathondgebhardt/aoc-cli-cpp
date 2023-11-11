@@ -10,6 +10,7 @@
 class HtmlContent
 {
 public:
+    HtmlContent(const std::string& content);
     HtmlContent(const std::string& content, const std::string& begin, const std::string& end);
     ~HtmlContent() noexcept = default;
 

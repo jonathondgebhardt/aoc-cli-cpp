@@ -84,13 +84,13 @@ void HttpsRequest::setContentType(const char* type)
     curl_easy_setopt(mCurl, CURLOPT_HTTPHEADER, list);
 }
 
-std::optional<std::string> HttpsRequest::operator()() const
+std::optional<HtmlContent> HttpsRequest::operator()() const
 {
     if(mCurl)
     {
         if(curl_easy_perform(mCurl) == CURLE_OK)
         {
-            return mReadBuffer;
+            return {mReadBuffer};
         }
         else
         {
@@ -100,6 +100,17 @@ std::optional<std::string> HttpsRequest::operator()() const
     else
     {
         std::cerr << "Could initialize CURL environment\n";
+    }
+
+    return {};
+}
+
+std::optional<HtmlContent> HttpsRequest::operator()(const std::string& begin,
+                                                    const std::string& end) const
+{
+    if(const auto content = operator()())
+    {
+        return (*content)(begin, end);
     }
 
     return {};

@@ -46,6 +46,7 @@ cxxopts::ParseResult GetArgs(int argc, char** argv)
     // TODO: Don't blatantly copy+paste from rust aoc-cli :(
     // clang-format off
     // We want these "commands" to be mutually exclusive. Use argparse instead?
+    // argparse v3.0 has mutual exclusion. Our version of vcpkg has up to v2.9.
     options.add_options()
         ("h,help", "Print help information", cxxopts::value<bool>()->default_value("false"))
         ("c,calendar", "Show Advent of Code calendar and stars collected", cxxopts::value<bool>()->default_value("false"))
@@ -58,6 +59,8 @@ cxxopts::ParseResult GetArgs(int argc, char** argv)
     options.add_options()
         ("y,year", "Puzzle year [default: year of current or last Advent of Code event]", cxxopts::value<std::string>())
         ("session-file", "Path to session cookie file [default: ~/.adventofcode.session]", cxxopts::value<std::string>())
+        ("I,input-only", "Download puzzle input only", cxxopts::value<bool>())
+        ("P,puzzle-only", "Download puzzle description only", cxxopts::value<bool>())
         ("w,width", "Width at which to wrap output [default: terminal width]", cxxopts::value<std::string>())
         ("o,overwrite", "Overwrite files if they already exist", cxxopts::value<std::string>())
         ("d,day", "Puzzle day [default: last unlocked day (during Advent of Code month)]", cxxopts::value<std::string>())
@@ -72,16 +75,30 @@ cxxopts::ParseResult GetArgs(int argc, char** argv)
     return result;
 }
 
-void Read(const std::string& year, const std::string& day)
+std::optional<HtmlContent> GetPuzzleDescription(const std::string& year, const std::string& day)
 {
     HttpsRequest request;
     request.setUrl("https://adventofcode.com/" + year + "/day/" + day);
     request.setContentType("text/html");
-    if(const auto content = request())
-    {
-        HtmlContent hc{*content, "<article class=\"day-desc\">", "</article>"};
-        Printer(HtmlFormatter(hc)(), 80)();
-    }
+    return request(R"(<article class="day-desc">)", "</article>");
+}
+
+std::optional<HtmlContent> GetPuzzleInput(const std::string& year, const std::string& day)
+{
+    HttpsRequest request;
+    request.setUrl("https://adventofcode.com/" + year + "/day/" + day + "/input");
+    request.setContentType("text/plain");
+    return request();
+}
+
+void Read(const HtmlContent& content)
+{
+    Printer(HtmlFormatter(content)(), 80)();
+}
+
+void Download(const HttpsRequest& request, const std::string& filename)
+{
+    // do the thing
 }
 
 int main(int argc, char** argv)
@@ -90,14 +107,31 @@ int main(int argc, char** argv)
     {
         const auto result = GetArgs(argc, argv);
 
+        // If year is not provided, assume it's this year.
         const auto year = result["year"].as<std::string>();
+
+        // If day is not provided, assume it's the last day completed by the user.
         const auto day = result["day"].as<std::string>();
 
         if(result["read"].as<bool>())
         {
             if(!year.empty() && !day.empty())
             {
-                Read(year, day);
+                if(result["I"].count() > 0 && result["I"].as<bool>())
+                {
+                    if(const auto content = GetPuzzleInput(year, day))
+                    {
+                        Read(*content);
+                    }
+                }
+
+                if(result["P"].count() > 0 && result["P"].as<bool>())
+                {
+                    if(const auto content = GetPuzzleDescription(year, day))
+                    {
+                        Read(*content);
+                    }
+                }
             }
         }
     }
