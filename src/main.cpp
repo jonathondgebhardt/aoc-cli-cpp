@@ -80,7 +80,7 @@ void Read(const std::string& year, const std::string& day)
     if(const auto content = request())
     {
         HtmlContent hc{*content, "<article class=\"day-desc\">", "</article>"};
-        Printer(HtmlFormatter(hc)(), 0)();
+        Printer(HtmlFormatter(hc)(), 80)();
     }
 }
 
@@ -90,17 +90,16 @@ int main(int argc, char** argv)
     {
         const auto result = GetArgs(argc, argv);
 
+        const auto year = result["year"].as<std::string>();
+        const auto day = result["day"].as<std::string>();
 
-        //        const auto year = result["year"].as<std::string>();
-        //        const auto day = result["day"].as<std::string>();
-        //
-        //        if(result["read"].as<bool>())
-        //        {
-        //            if(!year.empty() && !day.empty())
-        //            {
-        //                Read(year, day);
-        //            }
-        //        }
+        if(result["read"].as<bool>())
+        {
+            if(!year.empty() && !day.empty())
+            {
+                Read(year, day);
+            }
+        }
     }
     catch(cxxopts::exceptions::parsing& e)
     {

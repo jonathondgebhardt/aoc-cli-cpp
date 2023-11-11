@@ -20,34 +20,31 @@ void Printer::operator()() const
         {
             auto line = mContent.substr(begin, mWidth);
 
-            // New line characters needs to be considered: if a new line is in the line, change
-            // `begin` to just after the new line and continue.
-            if(const auto newLine = line.find('\n'); newLine != std::string::npos && newLine != 0)
+            if(const auto newLine = line.find_last_of('\n'); newLine != std::string::npos)
             {
+                // New line characters needs to be considered: if a new line is in the line, change
+                // `begin` to just after the new line and continue.
                 line = mContent.substr(begin, newLine + 1);
                 std::cout << line;
+                begin += line.size();
+            }
+            else if(!std::isspace(line[mWidth - 1]))
+            {
+                // If a line doesn't end in whitespace, that means we're cutting off a word. Go
+                // backwards.
+                const auto endIndex = line.find_last_of(' ');
+                line = mContent.substr(begin, endIndex);
+                std::cout << line << "\n";
+
+                // If begin is not adjusted, some lines will contain a single space at the beginning
+                // of the line.
+                begin += line.size() + 1;
             }
             else
             {
                 std::cout << line << "\n";
+                begin += line.size();
             }
-
-            // TODO: If a line doesn't end in whitespace, I want to find the last instance of
-            // whitespace in the substring and end the line there. The following code ain't it:
-            // infinite loop.
-            //        else if(!std::regex_match(line, std::regex{"\\s$"}))
-            //        {
-            //            line = line.substr(begin, line.find_last_of("\\s") - begin);
-            //        }
-
-            // Do look ahead? Text like:
-            // ...
-            // food, but they need a lot of magical energy to deliver presents on Christmas. Fo
-            // r that,
-            // ...
-            // looks bad.
-
-            begin += line.size();
         }
     }
 }

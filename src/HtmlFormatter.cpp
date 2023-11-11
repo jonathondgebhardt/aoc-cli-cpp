@@ -10,6 +10,44 @@ namespace
         return reinterpret_cast<const char*>(xc);
     }
 
+    bool IsHeadingNode(xmlNodePtr node)
+    {
+        return node && node->parent && node->parent->name &&
+               GetStringFromXmlChar(node->parent->name) == "h2";
+    }
+
+    // Close, but not quite:
+    // clang-format off
+    //  - The first Elf is carrying food with 1000 - , 2000 - , and 3000 -  Calories, a total of 6000 -  Calories.
+    // clang-format on
+    bool IsListNode(xmlNodePtr node)
+    {
+        if(!node)
+        {
+            return false;
+        }
+
+        const auto parent = node->parent;
+        if(!parent)
+        {
+            return false;
+        }
+
+        const auto grandParent = parent->parent;
+        if(!grandParent)
+        {
+            return false;
+        }
+
+        if(!parent->name || !grandParent->name)
+        {
+            return false;
+        }
+
+        return GetStringFromXmlChar(parent->name) == "li" &&
+               GetStringFromXmlChar(grandParent->name) == "ul";
+    }
+
     void ExtractTextNodes(xmlNodePtr node, std::stringstream& ss)
     {
         if(!node)
@@ -17,26 +55,13 @@ namespace
             return;
         }
 
-        const auto isHeading =
-            node->parent && node->parent->name && GetStringFromXmlChar(node->parent->name) == "h2";
-        if(isHeading)
+        if(IsHeadingNode(node))
         {
             ss << "\n";
         }
 
         if(node->type == XML_TEXT_NODE)
         {
-            // Close, but not quite:
-            // clang-format off
-            //  - The first Elf is carrying food with 1000 - , 2000 - , and 3000 -  Calories, a total of 6000 -  Calories.
-            // clang-format on
-            // Maybe I need to check the parent's parent?!?!?
-            if(node->parent && node->parent->name &&
-               GetStringFromXmlChar(node->parent->name) == "li")
-            {
-                ss << " - ";
-            }
-
             ss << node->content;
 
             if(node->children != nullptr)
@@ -44,7 +69,7 @@ namespace
                 ss << "\n\n";
             }
 
-            if(isHeading)
+            if(IsHeadingNode(node))
             {
                 ss << "\n\n";
             }
