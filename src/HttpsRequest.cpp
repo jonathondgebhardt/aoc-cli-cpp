@@ -37,9 +37,15 @@ HttpsRequest::HttpsRequest()
     // Disable progress bar
     curl_easy_setopt(mCurl, CURLOPT_NOPROGRESS, 1L);
 
-    // Read contents into mReadBuffer.
+    // Read contents into mReadBuffer
     curl_easy_setopt(mCurl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(mCurl, CURLOPT_WRITEDATA, &mReadBuffer);
+
+    // Include user agent information in the header
+    // https://www.reddit.com/r/adventofcode/wiki/faqs/automation/
+    const auto userAgent =
+        "https://github.com/jonathondgebhardt/aoc-cli-cpp by jonathon.gebhardt@gmail.com";
+    curl_easy_setopt(mCurl, CURLOPT_USERAGENT, userAgent);
 
     if(const auto cookie = GetCookie())
     {
