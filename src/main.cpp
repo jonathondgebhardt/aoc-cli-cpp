@@ -1,5 +1,7 @@
 #include <cstdlib>
 #include <cxxopts.hpp>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 
 #include "HtmlContent.hpp"
@@ -7,130 +9,198 @@
 #include "HttpsRequest.hpp"
 #include "Printer.hpp"
 
-size_t WIDTH = 120;
+const char* DOWNLOAD_PREFIX = ".aoc-cli";
+const char* INPUT_PREFIX = "input";
+const char* PUZZLE_PREFIX = "puzzle";
 
-cxxopts::ParseResult GetArgs(int argc, char** argv)
+size_t WIDTH = 0;
+std::string YEAR;
+std::string DAY;
+std::string SESSION_FILE;
+
+std::string GetCurrentYear()
 {
-    // clang-format off
-    // Advent of Code command-line tool
-    //
-    // Usage: aoc [OPTIONS] [COMMAND]
-    //
-    // Commands:
-    // calendar             Show Advent of Code calendar and stars collected [aliases: c]
-    // download             Save puzzle description and input to files [aliases: d]
-    // read                 Read puzzle statement (the default command) [aliases: r]
-    // submit               Submit puzzle answer [aliases: s]
-    // private-leaderboard  Show the state of a private leaderboard [aliases: p]
-    // help                 Print this message or the help of the given subcommand(s)
-    //
-    // Options:
-    // -d, --day <DAY>            Puzzle day [default: last unlocked day (during Advent of Code month)]
-    // -y, --year <YEAR>          Puzzle year [default: year of current or last Advent of Code event]
-    // -s, --session-file <PATH>  Path to session cookie file [default: ~/.adventofcode.session]
-    // -w, --width <WIDTH>        Width at which to wrap output [default: terminal width]
-    // -o, --overwrite            Overwrite files if they already exist
-    // -I, --input-only           Download puzzle input only
-    // -P, --puzzle-only          Download puzzle description only
-    // -i, --input-file <PATH>    Path where to save puzzle input [default: input]
-    // -p, --puzzle-file <PATH>   Path where to save puzzle description [default: puzzle.md]
-    // -q, --quiet                Restrict log messages to errors only
-    //     --debug                Enable debug logging
-    // -h, --help                 Print help information
-    // -V, --version              Print version information
-    // clang-format on
-
-    // TODO: Add a brief description
-    cxxopts::Options options{"aoc-cli", ""};
-
-    // TODO: Don't blatantly copy+paste from rust aoc-cli :(
-    // clang-format off
-    // We want these "commands" to be mutually exclusive. Use argparse instead?
-    // argparse v3.0 has mutual exclusion. Our version of vcpkg has up to v2.9.
-    options.add_options()
-        ("h,help", "Print help information", cxxopts::value<bool>()->default_value("false"))
-        ("c,calendar", "Show Advent of Code calendar and stars collected", cxxopts::value<bool>()->default_value("false"))
-        ("download", "Save puzzle description and input to files", cxxopts::value<bool>()->default_value("false"))
-        ("r,read", "Read puzzle statement (the default command)", cxxopts::value<bool>()->default_value("true"))
-        ("s,submit", "Submit puzzle answer", cxxopts::value<bool>()->default_value("false"))
-        ("p,private-leaderboard", "Show the state of a private leaderboard", cxxopts::value<bool>()->default_value("false"))
-        ;
-
-    options.add_options()
-        ("y,year", "Puzzle year [default: year of current or last Advent of Code event]", cxxopts::value<std::string>())
-        ("session-file", "Path to session cookie file [default: ~/.adventofcode.session]", cxxopts::value<std::string>())
-        ("I,input-only", "Download puzzle input only", cxxopts::value<bool>())
-        ("P,puzzle-only", "Download puzzle description only", cxxopts::value<bool>())
-        ("w,width", "Width at which to wrap output [default: terminal width]", cxxopts::value<std::string>())
-        ("o,overwrite", "Overwrite files if they already exist", cxxopts::value<std::string>())
-        ("d,day", "Puzzle day [default: last unlocked day (during Advent of Code month)]", cxxopts::value<std::string>())
-        ("v,version", "Print version information", cxxopts::value<std::string>())
-        ;
-    // clang-format on
-
-    const auto result = options.parse(argc, argv);
-
-    options.show_positional_help();
-
-    return result;
+    // https://stackoverflow.com/a/58153628
+    std::time_t t = std::time(nullptr);
+    std::tm* const pTInfo = std::localtime(&t);
+    return {std::to_string(1900 + pTInfo->tm_year)};
 }
 
-std::optional<HtmlContent> GetPuzzleDescription(const std::string& year, const std::string& day)
+std::string GetCurrentDay()
 {
+    // https://stackoverflow.com/a/58153628
+    std::time_t t = std::time(nullptr);
+    std::tm* const pTInfo = std::localtime(&t);
+    return {std::to_string(pTInfo->tm_mday)};
+}
+
+std::string GetHomePath()
+{
+#ifdef WIN32
+    //  TODO: Test this
+    if(const auto homeDrive = std::getenv("HOMEDRIVE"))
+    {
+        if(const auto homePath = std::getenv("HOMEPATH"))
+        {
+            // Surely there's a more elegant way to do this.
+            return std::string(homeDrive) + "/" + std::string(homePath);
+        }
+    }
+#else
+    return std::getenv("HOME");
+#endif
+}
+
+std::string ReadFileIntoString(const std::string& file)
+{
+    if(std::filesystem::exists(file))
+    {
+        std::ifstream t(file);
+        return {(std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>()};
+    }
+
+    return {};
+}
+
+std::string ReadOrDownload(const std::string& file, HttpsRequest& request)
+{
+    if(std::filesystem::exists(file))
+    {
+        return ReadFileIntoString(file);
+    }
+
+    if(const auto content = request())
+    {
+        HtmlFormatter plain{*content};
+
+        if(const auto home = GetHomePath(); !home.empty())
+        {
+            // FIXME: If the directories don't exist, this doesn't write out
+            std::ofstream ofs{file};
+            ofs << plain() << "\n";
+        }
+
+        return plain();
+    }
+
+    return {};
+}
+
+std::string GetPuzzleDescription()
+{
+    const auto home = GetHomePath();
+    const auto puzzle = home + "/" + DOWNLOAD_PREFIX + "/" + PUZZLE_PREFIX + "/" + DAY + ".txt";
+
     HttpsRequest request;
-    request.setUrl("https://adventofcode.com/" + year + "/day/" + day);
+    request.setUrl("https://adventofcode.com/" + YEAR + "/day/" + DAY);
     request.setContentType("text/html");
-    return request(R"(<article class="day-desc">)", "</article>");
+    request.setSessionFilePath(SESSION_FILE);
+    request.setBeginAndEndTags(R"(<article class="day-desc">)", "</article>");
+
+    return ReadOrDownload(puzzle, request);
 }
 
-std::optional<HtmlContent> GetPuzzleInput(const std::string& year, const std::string& day)
+std::string GetPuzzleInput()
 {
+    const auto home = GetHomePath();
+    const auto input = home + "/" + DOWNLOAD_PREFIX + "/" + INPUT_PREFIX + "/" + DAY + ".txt";
+
     HttpsRequest request;
-    request.setUrl("https://adventofcode.com/" + year + "/day/" + day + "/input");
+    request.setUrl("https://adventofcode.com/" + YEAR + "/day/" + DAY + "/input");
     request.setContentType("text/plain");
-    return request();
-}
+    request.setSessionFilePath(SESSION_FILE);
 
-void Read(const HtmlContent& content)
-{
-    Printer(HtmlFormatter(content)(), 80)();
-}
-
-void Download(const HttpsRequest& request, const std::string& filename)
-{
-    // do the thing
+    return ReadOrDownload(input, request);
 }
 
 int main(int argc, char** argv)
 {
     try
     {
-        const auto result = GetArgs(argc, argv);
+        // clang-format off
+        // Advent of Code command-line tool
+        //
+        // Usage: aoc [OPTIONS] [COMMAND]
+        //
+        // Commands:
+        // calendar             Show Advent of Code calendar and stars collected [aliases: c]
+        // download             Save puzzle description and input to files [aliases: d]
+        // read                 Read puzzle statement (the default command) [aliases: r]
+        // submit               Submit puzzle answer [aliases: s]
+        // private-leaderboard  Show the state of a private leaderboard [aliases: p]
+        // help                 Print this message or the help of the given subcommand(s)
+        //
+        // Options:
+        // -d, --day <DAY>            Puzzle day [default: last unlocked day (during Advent of Code month)]
+        // -y, --year <YEAR>          Puzzle year [default: year of current or last Advent of Code event]
+        // -s, --session-file <PATH>  Path to session cookie file [default: ~/.adventofcode.session]
+        // -w, --width <WIDTH>        Width at which to wrap output [default: terminal width]
+        // -o, --overwrite            Overwrite files if they already exist
+        // -I, --input-only           Download puzzle input only
+        // -P, --puzzle-only          Download puzzle description only
+        // -i, --input-file <PATH>    Path where to save puzzle input [default: input]
+        // -p, --puzzle-file <PATH>   Path where to save puzzle description [default: puzzle.md]
+        // -q, --quiet                Restrict log messages to errors only
+        //     --debug                Enable debug logging
+        // -h, --help                 Print help information
+        // -V, --version              Print version information
+        // clang-format on
+
+        // TODO: Add a brief description
+        cxxopts::Options options{"aoc-cli", ""};
+
+        // TODO: Don't blatantly copy+paste from rust aoc-cli :(
+        // clang-format off
+        // We want these "commands" to be mutually exclusive. Use argparse instead?
+        // argparse v3.0 has mutual exclusion. Our version of vcpkg has up to v2.9.
+        options.add_options()
+            ("h,help", "Print help information", cxxopts::value<bool>()->default_value("false"))
+            ("c,calendar", "Show Advent of Code calendar and stars collected", cxxopts::value<bool>()->default_value("false"))
+
+            // Download and read are basically the same thing: in order to read, a download has to happen first. Maybe read actually shows it to the console and download just downloads.
+            ("download", "Save puzzle description and input to files", cxxopts::value<bool>()->default_value("false"))
+            ("r,read", "Read puzzle statement (the default command)", cxxopts::value<bool>()->default_value("true"))
+
+            ("s,submit", "Submit puzzle answer", cxxopts::value<bool>()->default_value("false"))
+            ("p,private-leaderboard", "Show the state of a private leaderboard", cxxopts::value<bool>()->default_value("false"))
+            ;
+
+        options.add_options()
+            ("y,year", "Puzzle year [default: year of current or last Advent of Code event]", cxxopts::value<std::string>()->default_value(GetCurrentYear()))
+            ("d,day", "Puzzle day [default: last unlocked day (during Advent of Code month)]", cxxopts::value<std::string>()->default_value(GetCurrentDay()))
+            ("session-file", "Path to session cookie file [default: ~/.adventofcode.session]", cxxopts::value<std::string>()->default_value(GetHomePath() + "/.adventofcode.session"))
+            ("I,input-only", "Download puzzle input only", cxxopts::value<bool>())
+            ("P,puzzle-only", "Download puzzle description only", cxxopts::value<bool>())
+            ("w,width", "Width at which to wrap output [default: terminal width]", cxxopts::value<size_t>()->default_value("0"))
+            ("o,overwrite", "Overwrite files if they already exist", cxxopts::value<bool>())
+            ("v,version", "Print version information", cxxopts::value<std::string>())
+            ;
+        // clang-format on
+
+        const auto result = options.parse(argc, argv);
+
+        WIDTH = result["width"].as<size_t>();
+
+        SESSION_FILE = result["session-file"].as<std::string>();
 
         // If year is not provided, assume it's this year.
-        const auto year = result["year"].as<std::string>();
+        YEAR = result["year"].as<std::string>();
 
         // If day is not provided, assume it's the last day completed by the user.
-        const auto day = result["day"].as<std::string>();
+        DAY = result["day"].as<std::string>();
 
         if(result["read"].as<bool>())
         {
-            if(!year.empty() && !day.empty())
+            if(!YEAR.empty() && !DAY.empty())
             {
                 if(result["I"].count() > 0 && result["I"].as<bool>())
                 {
-                    if(const auto content = GetPuzzleInput(year, day))
-                    {
-                        Read(*content);
-                    }
+                    Printer(GetPuzzleInput(), WIDTH)();
                 }
 
                 if(result["P"].count() > 0 && result["P"].as<bool>())
                 {
-                    if(const auto content = GetPuzzleDescription(year, day))
-                    {
-                        Read(*content);
-                    }
+                    Printer(GetPuzzleDescription(), WIDTH)();
                 }
             }
         }
