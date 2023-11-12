@@ -1,7 +1,5 @@
 #include "HtmlContent.hpp"
 
-#include <regex>
-
 HtmlContent::HtmlContent(const std::string& content) : mContent(content)
 {
 }
@@ -33,6 +31,7 @@ std::string HtmlContent::operator()() const
 {
     return mContent;
 }
+
 HtmlContent HtmlContent::operator()(const std::string& begin, const std::string& end) const
 {
     if(const auto extracted = operator()(); !extracted.empty())

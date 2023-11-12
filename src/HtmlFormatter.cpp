@@ -83,8 +83,8 @@ namespace
 HtmlFormatter::HtmlFormatter(const HtmlContent& content)
 {
     const auto& contentStr = content();
-    const auto doc = htmlReadMemory(contentStr.c_str(), contentStr.size(), "", nullptr,
-                                    XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
+    const auto doc = htmlReadMemory(contentStr.c_str(), static_cast<int>(contentStr.size()), "",
+                                    nullptr, XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
     if(doc)
     {
         ExtractTextNodes(reinterpret_cast<xmlNodePtr>(doc), mStream);
