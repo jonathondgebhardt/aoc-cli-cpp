@@ -5,21 +5,6 @@
 
 namespace
 {
-    std::optional<std::string> GetCookie()
-    {
-        // TODO: Don't hard code this
-        const auto sessionFile = ".adventofcode.session";
-        std::ifstream ifs{sessionFile};
-        if(ifs.is_open())
-        {
-            std::string line;
-            std::getline(ifs, line);
-            return "session=" + line;
-        }
-
-        return {};
-    }
-
     // https://stackoverflow.com/questions/9786150/save-curl-content-result-into-a-string-in-c
     size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
     {
@@ -46,15 +31,6 @@ HttpsRequest::HttpsRequest()
     const auto userAgent =
         "https://github.com/jonathondgebhardt/aoc-cli-cpp by jonathon.gebhardt@gmail.com";
     curl_easy_setopt(mCurl, CURLOPT_USERAGENT, userAgent);
-
-    if(const auto cookie = GetCookie())
-    {
-        curl_easy_setopt(mCurl, CURLOPT_COOKIE, (*cookie).c_str());
-    }
-    else
-    {
-        std::cerr << "Could not load session file\n";
-    }
 }
 
 HttpsRequest::~HttpsRequest() noexcept
@@ -90,7 +66,26 @@ void HttpsRequest::setContentType(const char* type)
     curl_easy_setopt(mCurl, CURLOPT_HTTPHEADER, list);
 }
 
-std::optional<HtmlContent> HttpsRequest::operator()() const
+void HttpsRequest::setSessionFilePath(const std::string& path)
+{
+    mSessionFilePath = path;
+
+    if(const auto cookie = getCookie())
+    {
+        curl_easy_setopt(mCurl, CURLOPT_COOKIE, (*cookie).c_str());
+    }
+    else
+    {
+        std::cerr << "Could not load session file\n";
+    }
+}
+
+void HttpsRequest::setBeginAndEndTags(const std::string& begin, const std::string& end)
+{
+    mBegin = begin;
+    mEnd = end;
+}
+
 std::optional<HtmlContent> HttpsRequest::operator()()
 {
     if(!mReadBuffer.empty() && mGetRequested)
@@ -119,11 +114,23 @@ std::optional<HtmlContent> HttpsRequest::operator()()
 }
 
 std::optional<HtmlContent> HttpsRequest::operator()(const std::string& begin,
-                                                    const std::string& end) const
+                                                    const std::string& end)
 {
     if(const auto content = operator()())
     {
         return (*content)(begin, end);
+    }
+
+    return {};
+}
+std::optional<std::string> HttpsRequest::getCookie() const
+{
+    std::ifstream ifs{mSessionFilePath};
+    if(ifs.is_open())
+    {
+        std::string line;
+        std::getline(ifs, line);
+        return "session=" + line;
     }
 
     return {};

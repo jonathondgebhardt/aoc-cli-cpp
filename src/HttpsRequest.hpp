@@ -21,12 +21,21 @@ public:
     void setContentType(const std::string& type);
     void setContentType(const char* type);
 
+    void setSessionFilePath(const std::string& path);
+
+    void setBeginAndEndTags(const std::string& begin, const std::string& end);
+
     // TODO: Return HtmlContent
     std::optional<HtmlContent> operator()();
-    std::optional<HtmlContent> operator()(const std::string& begin, const std::string& end) const;
+    std::optional<HtmlContent> operator()(const std::string& begin, const std::string& end);
 
 private:
+    std::optional<std::string> getCookie() const;
+
     CURL* mCurl = nullptr;
     std::string mReadBuffer;
+    std::string mSessionFilePath;
+    std::string mBegin;
+    std::string mEnd;
     bool mGetRequested = false;
 };
