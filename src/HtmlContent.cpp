@@ -8,22 +8,28 @@ HtmlContent::HtmlContent(const std::string& content, const std::string& begin,
                          const std::string& end)
 {
     // TODO: HTML is not case sensitive, should make all tags the same case. Use libxml instead?
-
-    auto beginIndex = content.find(begin);
-    while(beginIndex != std::string::npos)
+    if(!begin.empty() && !end.empty())
     {
-        beginIndex += begin.size();
-
-        auto endIndex = content.find(end, beginIndex);
-        if(endIndex == std::string::npos)
+        auto beginIndex = content.find(begin);
+        while(beginIndex != std::string::npos)
         {
-            break;
+            beginIndex += begin.size();
+
+            auto endIndex = content.find(end, beginIndex);
+            if(endIndex == std::string::npos)
+            {
+                break;
+            }
+
+            const auto length = endIndex - beginIndex;
+            mContent += content.substr(beginIndex, length);
+
+            beginIndex = content.find(begin, endIndex);
         }
-
-        const auto length = endIndex - beginIndex;
-        mContent += content.substr(beginIndex, length);
-
-        beginIndex = content.find(begin, endIndex);
+    }
+    else
+    {
+        mContent = content;
     }
 }
 
