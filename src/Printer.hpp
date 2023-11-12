@@ -12,5 +12,5 @@ public:
 
 private:
     std::string mContent;
-    size_t mWidth;
+    size_t mWidth = 0;
 };

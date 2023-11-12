@@ -1,139 +1,101 @@
 #include "HtmlFormatter.hpp"
 
 #include <iostream>
-#include <sstream>
+#include <libxml/HTMLparser.h>
 
 namespace
 {
-    //! Extracts content between begin and end tags.
-    class Extractor
+    std::string GetStringFromXmlChar(const xmlChar* xc)
     {
-    public:
-        // TODO: Add a constructor for symmetrical tags?
+        return reinterpret_cast<const char*>(xc);
+    }
 
-        Extractor(std::string begin, std::string end, std::string prefix = std::string(),
-                  std::string suffix = "\n")
-            : mPrefix(std::move(prefix)), mSuffix(std::move(suffix)), mBegin(std::move(begin)),
-              mEnd(std::move(end))
+    bool IsHeadingNode(xmlNodePtr node)
+    {
+        return node && node->parent && node->parent->name &&
+               GetStringFromXmlChar(node->parent->name) == "h2";
+    }
+
+    // Close, but not quite:
+    // clang-format off
+    //  - The first Elf is carrying food with 1000 - , 2000 - , and 3000 -  Calories, a total of 6000 -  Calories.
+    // clang-format on
+    bool IsListNode(xmlNodePtr node)
+    {
+        if(!node)
         {
+            return false;
         }
 
-        size_t extract(const std::string& content)
+        const auto parent = node->parent;
+        if(!parent)
         {
-            // Reset to avoid false positives
-            mBeginPos = std::string::npos;
-            mLength = std::string::npos;
+            return false;
+        }
 
-            mContent = content;
+        const auto grandParent = parent->parent;
+        if(!grandParent)
+        {
+            return false;
+        }
 
-            // TODO: Use regex :(
-            mBeginPos = content.find(mBegin);
+        if(!parent->name || !grandParent->name)
+        {
+            return false;
+        }
 
-            if(mBeginPos != std::string::npos)
+        return GetStringFromXmlChar(parent->name) == "li" &&
+               GetStringFromXmlChar(grandParent->name) == "ul";
+    }
+
+    // clang-tidy says don't use recursion: https://stackoverflow.com/a/63939994
+    // TODO: Investigate an iterative solution
+    void ExtractTextNodes(xmlNodePtr node, std::stringstream& ss)
+    {
+        if(!node)
+        {
+            return;
+        }
+
+        if(IsHeadingNode(node))
+        {
+            ss << "\n";
+        }
+
+        if(node->type == XML_TEXT_NODE)
+        {
+            ss << node->content;
+
+            if(node->children != nullptr)
             {
-                mBeginPos += mBegin.size();
-                const auto endPos = content.find(mEnd, mBeginPos);
-                if(endPos != std::string::npos)
-                {
-                    mLength = endPos - mBeginPos;
-                }
+                ss << "\n\n";
             }
 
-            return mBeginPos;
+            if(IsHeadingNode(node))
+            {
+                ss << "\n\n";
+            }
         }
 
-        [[nodiscard]] std::string operator()() const
-        {
-            return mPrefix + mContent.substr(mBeginPos, mLength) + mSuffix;
-        }
-
-        [[nodiscard]] size_t begin() const
-        {
-            return mBeginPos;
-        }
-
-        void setPrefix(const std::string& prefix)
-        {
-            mPrefix = prefix;
-        }
-
-        void setSuffix(const std::string& suffix)
-        {
-            mSuffix = suffix;
-        }
-
-    private:
-        // TODO: Add a single fire option? (i.e., extractor is only used once)
-
-        std::string mPrefix;
-        std::string mSuffix = "\n";
-
-        std::string mContent;
-        std::string mBegin;
-        std::string mEnd;
-
-        size_t mBeginPos = std::string::npos;
-        size_t mLength = std::string::npos;
-    };
-
-    std::vector<Extractor> GetExtractors()
-    {
-        std::vector<Extractor> extractors;
-
-        // TODO: There's a rogue "</codE>" in here...
-        extractors.emplace_back("<h2>", "</h2>");
-        extractors.emplace_back("<p>", "</p>", std::string(), "\n\n");
-        extractors.emplace_back("<pre><code>", "</code></pre>");
-        //    extractors.emplace_back("<code>", "</code>");
-        //    extractors.emplace_back("<em>", "</em>");
-
-        // FIXME: Extractors don't use regex
-        extractors.emplace_back("<a href.*?>", "</a>");
-
-        // TODO: Need to handle <li> and </li> specifically
-        extractors.emplace_back("<li>", "</li>", "- ");
-
-        return extractors;
+        ExtractTextNodes(node->children, ss);
+        ExtractTextNodes(node->next, ss);
     }
 }
 
-HtmlFormatter::HtmlFormatter(const HtmlContent& content) : mContent(content)
+HtmlFormatter::HtmlFormatter(const HtmlContent& content)
 {
+    const auto& contentStr = content();
+    const auto doc = htmlReadMemory(contentStr.c_str(), static_cast<int>(contentStr.size()), "",
+                                    nullptr, XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
+    if(doc)
+    {
+        ExtractTextNodes(reinterpret_cast<xmlNodePtr>(doc), mStream);
+
+        xmlFreeDoc(doc);
+    }
 }
 
 std::string HtmlFormatter::operator()()
 {
-    std::stringstream ss;
-
-    auto content = mContent();
-    auto extractors = GetExtractors();
-
-    size_t it;
-    do
-    {
-        it = std::string::npos;
-
-        // Update extractors
-        std::for_each(extractors.begin(), extractors.end(),
-                      [&content](Extractor& e) { e.extract(content); });
-
-        // Find extractor with smallest begin position
-        const auto first = std::min_element(extractors.begin(), extractors.end(),
-                                            [](Extractor& lhs, Extractor& rhs)
-                                            { return lhs.begin() < rhs.begin(); });
-
-        // Update stream
-        if(first != extractors.end() && first->begin() != std::string::npos)
-        {
-            std::cout << (*first)();
-
-            // FIXME: Printer doesn't like
-            //            ss << (*first)();
-
-            content = content.substr(first->begin());
-            it = first->begin();
-        }
-    } while(it != std::string::npos); // Continue until end of content
-
-    return ss.str();
+    return mStream.str();
 }

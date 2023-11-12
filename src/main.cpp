@@ -1,94 +1,319 @@
 #include <cstdlib>
 #include <cxxopts.hpp>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 
 #include "HtmlContent.hpp"
 #include "HtmlFormatter.hpp"
 #include "HttpsRequest.hpp"
 #include "Printer.hpp"
 
-size_t WIDTH = 120;
+const char* DOWNLOAD_PREFIX = ".aoc-cli";
+const char* INPUT_PREFIX = "input";
+const char* PUZZLE_PREFIX = "puzzle";
 
-cxxopts::ParseResult GetArgs(int argc, char** argv)
+size_t WIDTH = 0;
+std::string YEAR;
+std::string DAY;
+std::string SESSION_FILE;
+
+// FIXME: This should be getting current or last year's AoC
+std::string GetCurrentYear()
 {
-    // Commands:
-    // calendar             Show Advent of Code calendar and stars collected [aliases: c]
-    // download             Save puzzle description and input to files [aliases: d]
-    // read                 Read puzzle statement (the default command) [aliases: r]
-    // submit               Submit puzzle answer [aliases: s]
-    // private-leaderboard  Show the state of a private leaderboard [aliases: p]
-    // help                 Print this message or the help of the given subcommand(s)
-    //
-    // Options:
-    //-d, --day <DAY>            Puzzle day [default: last unlocked day (during Advent of Code
-    // month)] -y, --year <YEAR>          Puzzle year [default: year of current or last Advent of
-    // Code event] -s, --session-file <PATH>  Path to session cookie file [default:
-    //~/.adventofcode.session] -w, --width <WIDTH>        Width at which to wrap output [default:
-    // terminal width] -o, --overwrite            Overwrite files if they already exist -I,
-    //--input-only           Download puzzle input only -P, --puzzle-only          Download puzzle
-    // description only -i, --input-file <PATH>    Path where to save puzzle input [default: input]
-    //-p, --puzzle-file <PATH>   Path where to save puzzle description [default: puzzle.md]
-    //-q, --quiet                Restrict log messages to errors only
-    //--debug                Enable debug logging
-    //-h, --help                 Print help information
-    //-V, --version              Print version information
-
-    // TODO: Add a brief description
-    cxxopts::Options options{"aoc-cli", ""};
-
-    // TODO: Don't blatantly copy+paste from rust aoc-cli :(
-    // clang-format off
-    options.add_options()
-        ("r,read", "Read puzzle statement (the default command)", cxxopts::value<bool>()->default_value("true"))
-        ("y,year", "Puzzle year [default: year of current or last Advent of Code event]", cxxopts::value<std::string>())
-        ("d,day", "Puzzle day [default: last unlocked day (during Advent of Code month)]", cxxopts::value<std::string>())
-        ;
-    // clang-format on
-
-    return options.parse(argc, argv);
+    // https://stackoverflow.com/a/58153628
+    std::time_t t = std::time(nullptr);
+    std::tm* const pTInfo = std::localtime(&t);
+    return {std::to_string(1900 + pTInfo->tm_year)};
 }
 
-void Read(const std::string& year, const std::string& day)
+// FIXME: This should be getting the last unlocked day
+std::string GetCurrentDay()
 {
-    HttpsRequest request;
-    request.setUrl("https://adventofcode.com/" + year + "/day/" + day);
-    request.setContentType("text/html");
+    // https://stackoverflow.com/a/58153628
+    std::time_t t = std::time(nullptr);
+    std::tm* const pTInfo = std::localtime(&t);
+    return {std::to_string(pTInfo->tm_mday)};
+}
+
+std::string GetHomePath()
+{
+#ifdef WIN32
+    //  TODO: Test this
+    if(const auto homeDrive = std::getenv("HOMEDRIVE"))
+    {
+        if(const auto homePath = std::getenv("HOMEPATH"))
+        {
+            // Surely there's a more elegant way to do this.
+            return std::string(homeDrive) + "/" + std::string(homePath);
+        }
+    }
+#else
+    return std::getenv("HOME");
+#endif
+}
+
+std::string ReadFileIntoString(const std::string& file)
+{
+    if(std::filesystem::exists(file))
+    {
+        std::ifstream t(file);
+        return {(std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>()};
+    }
+
+    return {};
+}
+
+bool CreateIfDoesNotExist(const std::filesystem::path& path)
+{
+    if(!std::filesystem::exists(path))
+    {
+        try
+        {
+            std::filesystem::create_directories(path);
+            return true;
+        }
+        catch(...)
+        {
+            std::cerr << "Could not create directory '" << path << "'\n";
+        }
+    }
+
+    return false;
+}
+
+std::string ReadOrDownload(const std::string& file, HttpsRequest& request)
+{
+    if(std::filesystem::exists(file))
+    {
+        std::cout << "File '" << file << "' found on the system\n";
+        return ReadFileIntoString(file);
+    }
+
+    std::cout << "File '" << file << "' not found on the system, downloading...\n";
     if(const auto content = request())
     {
-        HtmlContent hc{*content, "<main>", "</main>"};
-        HtmlFormatter formatter{hc};
+        HtmlFormatter plain{*content};
 
-        Printer(formatter(), 120)();
+        if(const auto home = GetHomePath(); !home.empty())
+        {
+            CreateIfDoesNotExist(std::filesystem::path{file}.parent_path());
+
+            std::ofstream ofs{file};
+            ofs << plain() << "\n";
+        }
+
+        return plain();
     }
+
+    return {};
+}
+
+std::string GetPuzzleDescription()
+{
+    const auto home = GetHomePath();
+    const auto puzzle = home + "/" + DOWNLOAD_PREFIX + "/" + PUZZLE_PREFIX + "/" + DAY + ".txt";
+
+    HttpsRequest request;
+    request.setUrl("https://adventofcode.com/" + YEAR + "/day/" + DAY);
+    request.setContentType("text/html");
+    request.setSessionFilePath(SESSION_FILE);
+    request.setBeginAndEndTags(R"(<article class="day-desc">)", "</article>");
+
+    return ReadOrDownload(puzzle, request);
+}
+
+std::string GetPuzzleInput()
+{
+    const auto home = GetHomePath();
+    const auto input = home + "/" + DOWNLOAD_PREFIX + "/" + INPUT_PREFIX + "/" + DAY + ".txt";
+
+    HttpsRequest request;
+    request.setUrl("https://adventofcode.com/" + YEAR + "/day/" + DAY + "/input");
+    request.setContentType("text/plain");
+    request.setSessionFilePath(SESSION_FILE);
+
+    return ReadOrDownload(input, request);
+}
+
+// FIXME: The calendar retrieved by this function makes it look like you've solved every problem. Go
+// you!
+std::string GetCalendar()
+{
+    HttpsRequest request;
+    request.setUrl("https://adventofcode.com/" + YEAR);
+    request.setContentType("text/html");
+    request.setBeginAndEndTags("<main>", "</main>");
+    if(const auto content = request())
+    {
+        HtmlFormatter plain{*content};
+        return plain();
+    }
+
+    return {};
+}
+
+std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
+{
+    HttpsRequest request;
+    request.setUrl("https://adventofcode.com/" + YEAR + "/leaderboard/private/view/" +
+                   leaderBoardId);
+    request.setContentType("text/html");
+    request.setBeginAndEndTags("<article>", "</article>");
+    if(const auto content = request())
+    {
+        //        HtmlFormatter plain{*content};
+        //        return plain();
+        return (*content)();
+    }
+
+    return {};
 }
 
 int main(int argc, char** argv)
 {
-    const auto result = GetArgs(argc, argv);
-    const auto year = result["year"].as<std::string>();
-    const auto day = result["day"].as<std::string>();
-
-    if(result["read"].as<bool>())
+    try
     {
-        if(!year.empty() && !day.empty())
+        // TODO: Add a brief description
+        cxxopts::Options options{"aoc-cli", ""};
+
+        // TODO: Don't blatantly copy+paste from rust aoc-cli :(
+        // clang-format off
+        options.add_options()("command", "What that dog doin", cxxopts::value<std::string>()->default_value("read"));
+        options.parse_positional({"command"});
+
+        options.add_options()
+            ("y,year", "Puzzle year [default: year of current or last Advent of Code event]", cxxopts::value<std::string>()->default_value(GetCurrentYear()))
+            ("d,day", "Puzzle day [default: last unlocked day (during Advent of Code month)]", cxxopts::value<std::string>()->default_value(GetCurrentDay()))
+            ("s,session-file", "Path to session cookie file [default: ~/.adventofcode.session]", cxxopts::value<std::string>()->default_value(GetHomePath() + "/.adventofcode.session"))
+            ("i,input-only", "Download puzzle input only", cxxopts::value<bool>()->default_value("false"))
+            ("p,puzzle-only", "Download puzzle description only", cxxopts::value<bool>()->default_value("false"))
+            ("w,width", "Width at which to wrap output [default: terminal width]", cxxopts::value<size_t>()->default_value("0"))
+            ("h,help", "Print help information", cxxopts::value<bool>()->default_value("false"))
+            ("v,version", "Print version information", cxxopts::value<std::string>())
+            ;
+
+        options.custom_help("[COMMANDS]");
+
+        // This is a bit of a hack: take advantage of being able to write on the same "line" as the
+        // first line of the help message. This string should show up before the rest of the options
+        // in the help message.
+        options.positional_help(
+            "[OPTIONS]\n\n"
+                    "Commands:\n"
+                    "  calendar                Show Advent of Code calendar and stars collected\n"
+                    "  download                Save puzzle description and input to files\n"
+                    "  read                    Read puzzle statement (the default command)\n"
+                    "  submit                  Submit puzzle answer\n"
+                    "  private-leaderboard     Show the state of a private leaderboard"
+        );
+        // clang-format on
+
+        const auto result = options.parse(argc, argv);
+
+        if(result.count("help"))
         {
-            Read(year, day);
+            std::cout << options.help() << "\n";
+            return EXIT_SUCCESS;
+        }
+
+        const auto command = result["command"].as<std::string>();
+
+        WIDTH = result["width"].as<size_t>();
+
+        SESSION_FILE = result["session-file"].as<std::string>();
+
+        // If year is not provided, assume it's this year or the previous year's AoC if it's not yet
+        // December.
+        YEAR = result["year"].as<std::string>();
+
+        // If day is not provided, assume it's the last day completed by the user.
+        DAY = result["day"].as<std::string>();
+
+        if(command == "read")
+        {
+            // Surely there's a more elegant way to do this
+            if(result["input-only"].count() > 0 && result["input-only"].as<bool>())
+            {
+                Printer(GetPuzzleInput(), WIDTH)();
+            }
+            else if(result["puzzle-only"].count() > 0 && result["puzzle-only"].as<bool>())
+            {
+                Printer(GetPuzzleDescription(), WIDTH)();
+            }
+            else
+            {
+                Printer(GetPuzzleInput(), WIDTH)();
+                Printer(GetPuzzleDescription(), WIDTH)();
+            }
+        }
+        else if(command == "download")
+        {
+            // Surely there's a more elegant way to do this
+            if(result["input-only"].count() > 0 && result["input-only"].as<bool>())
+            {
+                GetPuzzleInput();
+            }
+            else if(result["puzzle-only"].count() > 0 && result["puzzle-only"].as<bool>())
+            {
+                GetPuzzleDescription();
+            }
+            else
+            {
+                GetPuzzleInput();
+                GetPuzzleDescription();
+            }
+        }
+        else if(command == "calendar")
+        {
+            // I don't think it makes sense to allow the user to specify the width. The calendar was
+            // designed for a certain width, so deal with it.
+            Printer(GetCalendar(), 0)();
+        }
+        else if(command == "submit")
+        {
+            std::cout << "Implement submit\n";
+        }
+        else if(command == "private-leaderboard")
+        {
+            // TODO: Don't hardcode
+            // FIXME: This isn't working at all
+            //            Printer(GetPrivateLeaderBoard(), 0)();
+        }
+        else
+        {
+            std::cerr << "Unrecognized command '" << command << "'\n";
+            std::cout << options.help() << "\n";
+            return EXIT_FAILURE;
         }
     }
+    catch(cxxopts::exceptions::parsing& e)
+    {
+        std::cerr << "Error parsing arguments: " << e.what() << "\n";
+        return EXIT_FAILURE;
+    }
+    catch(cxxopts::exceptions::specification& e)
+    {
+        std::cerr << "Error defining options: " << e.what() << "\n";
+        return EXIT_FAILURE;
+    }
+    catch(cxxopts::exceptions::exception& e)
+    {
+        std::cerr << "Error : " << e.what() << "\n";
+        return EXIT_FAILURE;
+    }
+    catch(std::exception& e)
+    {
+        std::cerr << "Error : " << e.what() << "\n";
+        return EXIT_FAILURE;
+    }
+    catch(...)
+    {
+        std::cerr << "Unknown exception\n";
+        return EXIT_FAILURE;
+    }
 
-    //    {
-    //        std::cout << "Input:\n";
-    //
-    //        HttpsRequest request;
-    //        request.setUrl("https://adventofcode.com/2022/day/1/input");
-    //        request.setContentType("text/plain");
-    //        if(const auto content = request())
-    //        {
-    //            std::cout << *content << "\n";
-    //        }
-    //
-    //        std::cout << "\n";
-    //    }
-
+    // Add getting sample input?
     //    {
     // Beginning of sample input starts with "<pre><code>" and ends with "</code></pre>"
     // Ex:
@@ -106,27 +331,6 @@ int main(int argc, char** argv)
     //        HttpsRequest request;
     //        request.setUrl("https://adventofcode.com/2022/day/1");
     //        request.setContentType("text/html");
-    //        if(const auto content = request())
-    //        {
-    //            std::cout << *content << "\n";
-    //        }
-    //
-    //        std::cout << "\n";
-    //    }
-
-    //    {
-    //        // clang-format off
-    //        // <a aria-label="Day 1, two stars" href="/2022/day/1" class="calendar-day1
-    //        calendar-verycomplete"><span class="calendar-color-u">  ~    ~  ~      ~     ~ ~ ~
-    //        ~  ~  ~   ~   </span>  <span class="calendar-day"> 1</span> <span
-    //        class="calendar-mark-complete">*</span><span
-    //        class="calendar-mark-verycomplete">*</span></a>
-    //        // clang-format on
-    //        std::cout << "Calendar:\n";
-    //
-    //        HttpsRequest request;
-    //        request.setUrl("https://adventofcode.com/2022");
-    //        request.setContentType("text/plain");
     //        if(const auto content = request())
     //        {
     //            std::cout << *content << "\n";

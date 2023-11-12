@@ -3,16 +3,18 @@
 #include <vector>
 
 #include "HtmlContent.hpp"
+#include <sstream>
 
-//! Extracts specific content from HtmlContent and formats it. Use operator() to get formatted
-//! content.
+//! Extracts all plain text from HtmlContent and attempts to format it with operator().
 class HtmlFormatter
 {
 public:
+    //! Extracts plain text from the HtmlContent. HtmlContent should be valid HTML.
     explicit HtmlFormatter(const HtmlContent& content);
 
-    std::string operator()();
+    //! Yields formatted plain text.
+    std::string operator()() const;
 
 private:
-    HtmlContent mContent;
+    std::stringstream mStream;
 };

@@ -1,14 +1,36 @@
 #include "HtmlContent.hpp"
 
-#include <regex>
+HtmlContent::HtmlContent(const std::string& content) : mContent(content)
+{
+}
 
 HtmlContent::HtmlContent(const std::string& content, const std::string& begin,
                          const std::string& end)
 {
-    // TODO: HTML is not case sensitive, should make all tags the same case
-    const auto beginIndex = content.find(begin) + begin.size();
-    const auto length = content.find(end) - beginIndex;
-    mContent = content.substr(beginIndex, length);
+    // TODO: HTML is not case sensitive, should make all tags the same case. Use libxml instead?
+    if(!begin.empty() && !end.empty())
+    {
+        auto beginIndex = content.find(begin);
+        while(beginIndex != std::string::npos)
+        {
+            beginIndex += begin.size();
+
+            auto endIndex = content.find(end, beginIndex);
+            if(endIndex == std::string::npos)
+            {
+                break;
+            }
+
+            const auto length = endIndex - beginIndex;
+            mContent += content.substr(beginIndex, length);
+
+            beginIndex = content.find(begin, endIndex);
+        }
+    }
+    else
+    {
+        mContent = content;
+    }
 }
 
 std::string HtmlContent::operator()() const
