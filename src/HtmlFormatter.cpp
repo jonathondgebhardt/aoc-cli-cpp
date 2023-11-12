@@ -48,6 +48,8 @@ namespace
                GetStringFromXmlChar(grandParent->name) == "ul";
     }
 
+    // clang-tidy says don't use recursion: https://stackoverflow.com/a/63939994
+    // TODO: Investigate an iterative solution
     void ExtractTextNodes(xmlNodePtr node, std::stringstream& ss)
     {
         if(!node)

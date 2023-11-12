@@ -70,13 +70,13 @@ void HttpsRequest::setSessionFilePath(const std::string& path)
 {
     mSessionFilePath = path;
 
-    if(const auto cookie = getCookie())
+    if(const auto cookie = getCookie(); !cookie.empty())
     {
-        curl_easy_setopt(mCurl, CURLOPT_COOKIE, (*cookie).c_str());
+        curl_easy_setopt(mCurl, CURLOPT_COOKIE, cookie.c_str());
     }
     else
     {
-        std::cerr << "Could not load session file\n";
+        std::cerr << "Could not load session file: " << path << "\n";
     }
 }
 
@@ -123,7 +123,7 @@ std::optional<HtmlContent> HttpsRequest::operator()(const std::string& begin,
 
     return {};
 }
-std::optional<std::string> HttpsRequest::getCookie() const
+std::string HttpsRequest::getCookie() const
 {
     std::ifstream ifs{mSessionFilePath};
     if(ifs.is_open())

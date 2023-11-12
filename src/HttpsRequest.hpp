@@ -25,12 +25,11 @@ public:
 
     void setBeginAndEndTags(const std::string& begin, const std::string& end);
 
-    // TODO: Return HtmlContent
     std::optional<HtmlContent> operator()();
     std::optional<HtmlContent> operator()(const std::string& begin, const std::string& end);
 
 private:
-    std::optional<std::string> getCookie() const;
+    std::string getCookie() const;
 
     CURL* mCurl = nullptr;
     std::string mReadBuffer;
