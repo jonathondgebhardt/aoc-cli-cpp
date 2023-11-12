@@ -22,10 +22,11 @@ public:
     void setContentType(const char* type);
 
     // TODO: Return HtmlContent
-    std::optional<HtmlContent> operator()() const;
+    std::optional<HtmlContent> operator()();
     std::optional<HtmlContent> operator()(const std::string& begin, const std::string& end) const;
 
 private:
     CURL* mCurl = nullptr;
     std::string mReadBuffer;
+    bool mGetRequested = false;
 };

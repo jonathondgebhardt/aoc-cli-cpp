@@ -91,12 +91,19 @@ void HttpsRequest::setContentType(const char* type)
 }
 
 std::optional<HtmlContent> HttpsRequest::operator()() const
+std::optional<HtmlContent> HttpsRequest::operator()()
 {
+    if(!mReadBuffer.empty() && mGetRequested)
+    {
+        return HtmlContent{mReadBuffer};
+    }
+
     if(mCurl)
     {
         if(curl_easy_perform(mCurl) == CURLE_OK)
         {
-            return {mReadBuffer};
+            mGetRequested = true;
+            return HtmlContent{mReadBuffer, mBegin, mEnd};
         }
         else
         {
