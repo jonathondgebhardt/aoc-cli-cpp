@@ -22,10 +22,6 @@ HttpsRequest::HttpsRequest()
     // Disable progress bar
     curl_easy_setopt(mCurl, CURLOPT_NOPROGRESS, 1L);
 
-    // Read contents into mReadBuffer
-    curl_easy_setopt(mCurl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(mCurl, CURLOPT_WRITEDATA, &mReadBuffer);
-
     // Include user agent information in the header
     // https://www.reddit.com/r/adventofcode/wiki/faqs/automation/
     const auto userAgent =
@@ -95,14 +91,18 @@ std::optional<HtmlContent> HttpsRequest::operator()()
 
     if(mCurl)
     {
-        if(curl_easy_perform(mCurl) == CURLE_OK)
+        auto res = curl_easy_perform(mCurl);
+        long httpCode = 0;
+        curl_easy_getinfo(mCurl, CURLINFO_RESPONSE_CODE, &httpCode);
+        std::cout << "http code: " << httpCode;
+        if(res == CURLE_OK)
         {
             mGetRequested = true;
             return HtmlContent{mReadBuffer, mBegin, mEnd};
         }
         else
         {
-            std::cerr << "Could not perform HTTPS request\n";
+            std::cerr << "Could not perform HTTPS request: " << curl_easy_strerror(res) << "\n";
         }
     }
     else
@@ -134,4 +134,17 @@ std::string HttpsRequest::getCookie() const
     }
 
     return {};
+}
+
+void HttpsRequest::useGet()
+{
+    curl_easy_setopt(mCurl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(mCurl, CURLOPT_WRITEDATA, &mReadBuffer);
+}
+
+void HttpsRequest::usePost()
+{
+    curl_easy_setopt(mCurl, CURLOPT_POST, 1L);
+    curl_easy_setopt(mCurl, CURLOPT_READFUNCTION, WriteCallback);
+    curl_easy_setopt(mCurl, CURLOPT_READDATA, &mReadBuffer);
 }

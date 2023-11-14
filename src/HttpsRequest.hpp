@@ -28,10 +28,14 @@ public:
     std::optional<HtmlContent> operator()();
     std::optional<HtmlContent> operator()(const std::string& begin, const std::string& end);
 
-private:
-    std::string getCookie() const;
+protected:
+    void useGet();
+    void usePost();
 
     CURL* mCurl = nullptr;
+
+private:
+    std::string getCookie() const;
     std::string mReadBuffer;
     std::string mSessionFilePath;
     std::string mBegin;
