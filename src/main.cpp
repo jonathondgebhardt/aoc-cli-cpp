@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "AocHttpsRequest.hpp"
 #include "HtmlContent.hpp"
 #include "HtmlFormatter.hpp"
 #include "HttpsRequest.hpp"
@@ -114,8 +115,8 @@ std::string GetPuzzleDescription()
     const auto home = GetHomePath();
     const auto puzzle = home + "/" + DOWNLOAD_PREFIX + "/" + PUZZLE_PREFIX + "/" + DAY + ".txt";
 
-    HttpsRequest request;
-    request.setUrl("https://adventofcode.com/" + YEAR + "/day/" + DAY);
+    AocGetRequest request;
+    request.setPage(YEAR + "/day/" + DAY);
     request.setContentType("text/html");
     request.setSessionFilePath(SESSION_FILE);
     request.setBeginAndEndTags(R"(<article class="day-desc">)", "</article>");
@@ -128,22 +129,25 @@ std::string GetPuzzleInput()
     const auto home = GetHomePath();
     const auto input = home + "/" + DOWNLOAD_PREFIX + "/" + INPUT_PREFIX + "/" + DAY + ".txt";
 
-    HttpsRequest request;
-    request.setUrl("https://adventofcode.com/" + YEAR + "/day/" + DAY + "/input");
+    AocGetRequest request;
+    request.setPage(YEAR + "/day/" + DAY + "/input");
     request.setContentType("text/plain");
     request.setSessionFilePath(SESSION_FILE);
 
+    // request is sliced
     return ReadOrDownload(input, request);
 }
 
-// FIXME: The calendar retrieved by this function makes it look like you've solved every problem. Go
-// you!
+// FIXME: The calendar retrieved by this function makes it look like you've solved every problem.
+//  Go you!
 std::string GetCalendar()
 {
-    HttpsRequest request;
-    request.setUrl("https://adventofcode.com/" + YEAR);
+    // TODO: Prevent spamming AoC servers
+    AocGetRequest request;
+    request.setPage(YEAR);
     request.setContentType("text/html");
     request.setBeginAndEndTags("<main>", "</main>");
+    request.setSessionFilePath(SESSION_FILE);
     if(const auto content = request())
     {
         HtmlFormatter plain{*content};
@@ -155,15 +159,34 @@ std::string GetCalendar()
 
 std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
 {
-    HttpsRequest request;
-    request.setUrl("https://adventofcode.com/" + YEAR + "/leaderboard/private/view/" +
-                   leaderBoardId);
+    // TODO: Prevent spamming AoC servers
+    AocGetRequest request;
+    request.setPage(YEAR + "/leaderboard/private/view/" + leaderBoardId);
     request.setContentType("text/html");
     request.setBeginAndEndTags("<article>", "</article>");
+    request.setSessionFilePath(SESSION_FILE);
+
+    // FIXME: This request yields nothing
     if(const auto content = request())
     {
-        //        HtmlFormatter plain{*content};
-        //        return plain();
+        HtmlFormatter plain{*content};
+        return plain();
+    }
+
+    return {};
+}
+
+std::string SubmitAnswer(const std::string& answer)
+{
+    // TODO: Prevent spamming AoC servers
+    AocPostRequest request;
+    request.setPage("2022/day/12/answer");
+    request.setContentType("application/x-www-form-urlencoded");
+    request.setSessionFilePath(SESSION_FILE);
+
+    // FIXME: This request yields nothing
+    if(const auto content = request())
+    {
         return (*content)();
     }
 
@@ -268,11 +291,11 @@ int main(int argc, char** argv)
         {
             // I don't think it makes sense to allow the user to specify the width. The calendar was
             // designed for a certain width, so deal with it.
-            Printer(GetCalendar(), 0)();
+            //            Printer(GetCalendar(), 0)();
         }
         else if(command == "submit")
         {
-            std::cout << "Implement submit\n";
+            Printer(SubmitAnswer(std::string()), 0)();
         }
         else if(command == "private-leaderboard")
         {
