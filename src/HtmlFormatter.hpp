@@ -13,7 +13,7 @@ public:
     explicit HtmlFormatter(const HtmlContent& content);
 
     //! Yields formatted plain text.
-    std::string operator()() const;
+    std::string operator()();
 
 private:
     std::stringstream mStream;
