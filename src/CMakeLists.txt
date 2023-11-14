@@ -8,6 +8,7 @@ set(HEADERS
     Printer.hpp
     HtmlFormatter.hpp
     AocHttpsRequest.hpp
+    Throttler.hpp
 )
 
 set(SOURCES
@@ -17,6 +18,7 @@ set(SOURCES
     Printer.cpp
     HtmlFormatter.cpp
     AocHttpsRequest.cpp
+    Throttler.cpp
 )
 
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})

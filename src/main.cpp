@@ -9,6 +9,7 @@
 #include "HtmlFormatter.hpp"
 #include "HttpsRequest.hpp"
 #include "Printer.hpp"
+#include "Throttler.hpp"
 
 const char* DOWNLOAD_PREFIX = ".aoc-cli";
 const char* INPUT_PREFIX = "input";
@@ -92,7 +93,10 @@ std::string ReadOrDownload(const std::string& file, HttpsRequest& request)
     }
 
     std::cout << "File '" << file << "' not found on the system, downloading...\n";
-    if(const auto content = request())
+
+    Throttler t{&request, 30.0,
+                GetHomePath() + "/" + std::string(DOWNLOAD_PREFIX) + "/.lastgetrequest"};
+    if(const auto content = t.handleRequest())
     {
         HtmlFormatter plain{*content};
 
@@ -301,7 +305,7 @@ int main(int argc, char** argv)
         {
             // TODO: Don't hardcode
             // FIXME: This isn't working at all
-            //            Printer(GetPrivateLeaderBoard(), 0)();
+            Printer(GetPrivateLeaderBoard("192073"), 0)();
         }
         else
         {
