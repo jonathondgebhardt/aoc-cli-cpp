@@ -100,7 +100,7 @@ std::optional<HtmlContent> HttpsRequest::operator()()
         else
         {
             std::cerr << "Could not perform HTTPS request: " << curl_easy_strerror(res) << "\n";
-            
+
             long httpCode = 0;
             curl_easy_getinfo(mCurl, CURLINFO_RESPONSE_CODE, &httpCode);
             std::cerr << "http code: " << httpCode;
@@ -124,6 +124,7 @@ std::optional<HtmlContent> HttpsRequest::operator()(const std::string& begin,
 
     return {};
 }
+
 std::string HttpsRequest::getCookie() const
 {
     std::ifstream ifs{mSessionFilePath};

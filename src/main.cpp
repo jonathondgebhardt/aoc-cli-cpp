@@ -189,9 +189,14 @@ std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
 std::string SubmitAnswer(const std::string& answer)
 {
     AocPostRequest request;
+
+    // TODO: Don't hardcode
     request.setPage("2022/day/12/answer");
+
     request.setContentType("application/x-www-form-urlencoded");
     request.setSessionFilePath(SESSION_FILE);
+
+    // TODO: Use AocPostRequest::setPostContent
 
     // FIXME: This request yields nothing
     Throttler t{&request, THROTTLE_TIME,
@@ -302,7 +307,7 @@ int main(int argc, char** argv)
         {
             // I don't think it makes sense to allow the user to specify the width. The calendar was
             // designed for a certain width, so deal with it.
-            //            Printer(GetCalendar(), 0)();
+            Printer(GetCalendar(), 0)();
         }
         else if(command == "submit")
         {
@@ -311,7 +316,6 @@ int main(int argc, char** argv)
         else if(command == "private-leaderboard")
         {
             // TODO: Don't hardcode
-            // FIXME: This isn't working at all
             Printer(GetPrivateLeaderBoard("192073"), 0)();
         }
         else
