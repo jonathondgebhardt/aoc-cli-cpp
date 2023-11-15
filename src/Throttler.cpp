@@ -36,13 +36,15 @@ namespace
         return {};
     }
 
-    // FIXME: This is not touching the file.
     void TouchFile(const std::string& file)
     {
         if(std::filesystem::exists(file))
         {
-            std::ofstream{file}.put('a');
+            std::filesystem::remove(file);
         }
+
+        std::ofstream ofs;
+        ofs.open(file);
     }
 }
 
@@ -60,8 +62,9 @@ std::optional<HtmlContent> Throttler::handleRequest()
             << "In an effort to prevent overloading AoC servers, waiting to perform HTTPS request ("
             << delta << " seconds)\n";
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<long>(delta)));
-        TouchFile(mFile);
     }
+
+    TouchFile(mFile);
 
     return (*mRequest)();
 }

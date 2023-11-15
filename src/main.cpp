@@ -16,6 +16,7 @@ const char* INPUT_PREFIX = "input";
 const char* PUZZLE_PREFIX = "puzzle";
 
 size_t WIDTH = 0;
+double THROTTLE_TIME = 3.0;
 std::string YEAR;
 std::string DAY;
 std::string SESSION_FILE;
@@ -84,7 +85,7 @@ bool CreateIfDoesNotExist(const std::filesystem::path& path)
     return false;
 }
 
-std::string ReadOrDownload(const std::string& file, HttpsRequest& request)
+std::string ReadOrDownload(const std::string& file, HttpsRequest* request)
 {
     if(std::filesystem::exists(file))
     {
@@ -94,7 +95,7 @@ std::string ReadOrDownload(const std::string& file, HttpsRequest& request)
 
     std::cout << "File '" << file << "' not found on the system, downloading...\n";
 
-    Throttler t{&request, 30.0,
+    Throttler t{request, THROTTLE_TIME,
                 GetHomePath() + "/" + std::string(DOWNLOAD_PREFIX) + "/.lastgetrequest"};
     if(const auto content = t.handleRequest())
     {
@@ -104,6 +105,7 @@ std::string ReadOrDownload(const std::string& file, HttpsRequest& request)
         {
             CreateIfDoesNotExist(std::filesystem::path{file}.parent_path());
 
+            std::cout << "Downloaded '" << file << "'\n";
             std::ofstream ofs{file};
             ofs << plain() << "\n";
         }
@@ -125,7 +127,7 @@ std::string GetPuzzleDescription()
     request.setSessionFilePath(SESSION_FILE);
     request.setBeginAndEndTags(R"(<article class="day-desc">)", "</article>");
 
-    return ReadOrDownload(puzzle, request);
+    return ReadOrDownload(puzzle, &request);
 }
 
 std::string GetPuzzleInput()
@@ -138,21 +140,24 @@ std::string GetPuzzleInput()
     request.setContentType("text/plain");
     request.setSessionFilePath(SESSION_FILE);
 
-    // request is sliced
-    return ReadOrDownload(input, request);
+    return ReadOrDownload(input, &request);
 }
 
 // FIXME: The calendar retrieved by this function makes it look like you've solved every problem.
 //  Go you!
+// aoc-cli-rust handles this by looking for 'calendar-verycomplete' as two stars,
+// 'calendar-complete' as one star, and anything else as no stars.
 std::string GetCalendar()
 {
-    // TODO: Prevent spamming AoC servers
     AocGetRequest request;
     request.setPage(YEAR);
     request.setContentType("text/html");
     request.setBeginAndEndTags("<main>", "</main>");
     request.setSessionFilePath(SESSION_FILE);
-    if(const auto content = request())
+
+    Throttler t{&request, THROTTLE_TIME,
+                GetHomePath() + "/" + std::string(DOWNLOAD_PREFIX) + "/.lastgetrequest"};
+    if(const auto content = t.handleRequest())
     {
         HtmlFormatter plain{*content};
         return plain();
@@ -163,7 +168,6 @@ std::string GetCalendar()
 
 std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
 {
-    // TODO: Prevent spamming AoC servers
     AocGetRequest request;
     request.setPage(YEAR + "/leaderboard/private/view/" + leaderBoardId);
     request.setContentType("text/html");
@@ -171,7 +175,9 @@ std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
     request.setSessionFilePath(SESSION_FILE);
 
     // FIXME: This request yields nothing
-    if(const auto content = request())
+    Throttler t{&request, THROTTLE_TIME,
+                GetHomePath() + "/" + std::string(DOWNLOAD_PREFIX) + "/.lastgetrequest"};
+    if(const auto content = t.handleRequest())
     {
         HtmlFormatter plain{*content};
         return plain();
@@ -182,14 +188,15 @@ std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
 
 std::string SubmitAnswer(const std::string& answer)
 {
-    // TODO: Prevent spamming AoC servers
     AocPostRequest request;
     request.setPage("2022/day/12/answer");
     request.setContentType("application/x-www-form-urlencoded");
     request.setSessionFilePath(SESSION_FILE);
 
     // FIXME: This request yields nothing
-    if(const auto content = request())
+    Throttler t{&request, THROTTLE_TIME,
+                GetHomePath() + "/" + std::string(DOWNLOAD_PREFIX) + "/.lastgetrequest"};
+    if(const auto content = t.handleRequest())
     {
         return (*content)();
     }

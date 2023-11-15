@@ -92,9 +92,6 @@ std::optional<HtmlContent> HttpsRequest::operator()()
     if(mCurl)
     {
         auto res = curl_easy_perform(mCurl);
-        long httpCode = 0;
-        curl_easy_getinfo(mCurl, CURLINFO_RESPONSE_CODE, &httpCode);
-        std::cout << "http code: " << httpCode;
         if(res == CURLE_OK)
         {
             mGetRequested = true;
@@ -103,6 +100,10 @@ std::optional<HtmlContent> HttpsRequest::operator()()
         else
         {
             std::cerr << "Could not perform HTTPS request: " << curl_easy_strerror(res) << "\n";
+            
+            long httpCode = 0;
+            curl_easy_getinfo(mCurl, CURLINFO_RESPONSE_CODE, &httpCode);
+            std::cerr << "http code: " << httpCode;
         }
     }
     else
