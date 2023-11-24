@@ -21,13 +21,21 @@ std::string YEAR;
 std::string DAY;
 std::string SESSION_FILE;
 
-// FIXME: This should be getting current or last year's AoC
 std::string GetCurrentYear()
 {
     // https://stackoverflow.com/a/58153628
     std::time_t t = std::time(nullptr);
     std::tm* const pTInfo = std::localtime(&t);
-    return {std::to_string(1900 + pTInfo->tm_year)};
+
+    auto currentYear = 1900 + pTInfo->tm_year;
+
+    // AoC starts December 1st. If it's not December yet, use last year.
+    if(pTInfo->tm_mon < 11)
+    {
+        --currentYear;
+    }
+
+    return {std::to_string(currentYear)};
 }
 
 // FIXME: This should be getting the last unlocked day
