@@ -152,6 +152,25 @@ std::string GetPuzzleInput()
     return ReadOrDownload(input, &request);
 }
 
+// FIXME: Make caching more intelligent.
+// The sample input is contained within the puzzle description. If the description is already
+// downloaded, I should be able to skip an HTTPS request. Should I keep the raw HTML somewhere on
+// the filesystem? Should I care??
+std::string GetPuzzleInputSample()
+{
+    const auto home = GetHomePath();
+    const auto puzzle =
+        home + "/" + DOWNLOAD_PREFIX + "/" + INPUT_PREFIX + "/" + DAY + "_sample.txt";
+
+    AocGetRequest request;
+    request.setPage(YEAR + "/day/" + DAY);
+    request.setContentType("text/html");
+    request.setSessionFilePath(SESSION_FILE);
+    request.setBeginAndEndTags("<pre><code>", "</code></pre>");
+
+    return ReadOrDownload(puzzle, &request);
+}
+
 // FIXME: The calendar retrieved by this function makes it look like you've solved every problem.
 //  Go you!
 // aoc-cli-rust handles this by looking for 'calendar-verycomplete' as two stars,
@@ -235,6 +254,7 @@ int main(int argc, char** argv)
             ("d,day", "Puzzle day", cxxopts::value<std::string>()->default_value(GetCurrentDay()))
             ("s,session-file", "Path to session cookie file", cxxopts::value<std::string>()->default_value(GetHomePath() + "/.adventofcode.session"))
             ("i,input-only", "Download puzzle input only", cxxopts::value<bool>()->default_value("false"))
+            ("sample-only", "Download puzzle input sample only", cxxopts::value<bool>()->default_value("false"))
             ("p,puzzle-only", "Download puzzle description only", cxxopts::value<bool>()->default_value("false"))
             ("w,width", "Width at which to wrap output", cxxopts::value<size_t>()->default_value("0"))
             ("h,help", "Print help information", cxxopts::value<bool>()->default_value("false"))
@@ -248,7 +268,7 @@ int main(int argc, char** argv)
         // in the help message.
         options.positional_help(
             "[OPTIONS]\n\n"
-                    "Commands:\n"
+                    "Commands:\n\n"
                     "  calendar                Show Advent of Code calendar and stars collected\n"
                     "  download                Save puzzle description and input to files\n"
                     "  read                    Read puzzle statement (the default command)\n"
@@ -272,6 +292,7 @@ int main(int argc, char** argv)
 
         SESSION_FILE = result["session-file"].as<std::string>();
 
+        // TODO: Make sure YEAR and DAY are within sensible bounds
         // If year is not provided, assume it's this year or the previous year's AoC if it's not yet
         // December.
         YEAR = result["year"].as<std::string>();
@@ -287,6 +308,10 @@ int main(int argc, char** argv)
                 // Don't enforce a width on input because that changes the meaning of the input.
                 Printer{GetPuzzleInput()}();
             }
+            else if(result["sample-only"].count() > 0 && result["sample-only"].as<bool>())
+            {
+                Printer{GetPuzzleInputSample(), WIDTH}();
+            }
             else if(result["puzzle-only"].count() > 0 && result["puzzle-only"].as<bool>())
             {
                 Printer{GetPuzzleDescription(), WIDTH}();
@@ -295,6 +320,7 @@ int main(int argc, char** argv)
             {
                 // Don't enforce a width on input because that changes the meaning of the input.
                 Printer{GetPuzzleInput()}();
+                Printer{GetPuzzleInputSample()}();
 
                 Printer{GetPuzzleDescription(), WIDTH}();
             }
@@ -306,6 +332,10 @@ int main(int argc, char** argv)
             {
                 GetPuzzleInput();
             }
+            else if(result["sample-only"].count() > 0 && result["sample-only"].as<bool>())
+            {
+                GetPuzzleInputSample();
+            }
             else if(result["puzzle-only"].count() > 0 && result["puzzle-only"].as<bool>())
             {
                 GetPuzzleDescription();
@@ -313,6 +343,7 @@ int main(int argc, char** argv)
             else
             {
                 GetPuzzleInput();
+                GetPuzzleInputSample();
                 GetPuzzleDescription();
             }
         }
@@ -360,32 +391,6 @@ int main(int argc, char** argv)
     {
         std::cerr << "Unknown exception\n";
     }
-
-    // Add getting sample input?
-    //    {
-    // Beginning of sample input starts with "<pre><code>" and ends with "</code></pre>"
-    // Ex:
-    // <pre><code>A Y
-    // B X
-    // C Z
-    // </code></pre>
-    //    const std::string startTags = "<pre><code>";
-    //    const auto beginPos = (*content).find(startTags) + startTags.size();
-    //    const auto endTags = "</code></pre>";
-    //    const auto size = (*content).find(endTags) - beginPos;
-    //
-    //        std::cout << "Sample input:\n";
-    //
-    //        HttpsRequest request;
-    //        request.setUrl("https://adventofcode.com/2022/day/1");
-    //        request.setContentType("text/html");
-    //        if(const auto content = request())
-    //        {
-    //            std::cout << *content << "\n";
-    //        }
-    //
-    //        std::cout << "\n";
-    //    }
 
     return EXIT_FAILURE;
 }
