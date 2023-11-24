@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <regex>
 
 #include "AocHttpsRequest.hpp"
 #include "HtmlContent.hpp"
@@ -173,22 +174,76 @@ std::string GetPuzzleInputSample()
 
 // FIXME: The calendar retrieved by this function makes it look like you've solved every problem.
 //  Go you!
+//
 // aoc-cli-rust handles this by looking for 'calendar-verycomplete' as two stars,
 // 'calendar-complete' as one star, and anything else as no stars.
+//
+// clang-format off
+// <a aria-label="Day 11, one star" href="/2022/day/11" class="calendar-day11 calendar-complete"> ... 
+// <a aria-label="Day 10, two stars" href="/2022/day/10" class="calendar-day10 calendar-verycomplete"> ...
+// clang-format on
+//
+// I'm using libxml so I lose this information entirely.
 std::string GetCalendar()
 {
     AocGetRequest request;
     request.setPage(YEAR);
     request.setContentType("text/html");
-    request.setBeginAndEndTags("<main>", "</main>");
+    request.setBeginAndEndTags(R"(<pre class="calendar">)", "</pre>");
     request.setSessionFilePath(SESSION_FILE);
 
     Throttler t{&request, THROTTLE_TIME,
                 GetHomePath() + "/" + std::string(DOWNLOAD_PREFIX) + "/.lastgetrequest"};
     if(const auto content = t.handleRequest())
     {
-        HtmlFormatter plain{*content};
-        return plain();
+        // HtmlFormatter plain{*content};
+        // return plain();
+        // clang-format off
+// <a aria-label="Day 12" href="/2022/day/12" class="calendar-day12">@@@@@@@###@@@#@@@@@@@@@@#@@##@@@#@@#@@#@#@@@@@@#@  <span class="calendar-day">12</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
+// <a aria-label="Day 11, one star" href="/2022/day/11" class="calendar-day11 calendar-complete">#@##@#@@@@##.~~.@@@@##@@@@@@##@@@##@#@@@####@@@#@  <span class="calendar-day">11</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
+// <a aria-label="Day 10, two stars" href="/2022/day/10" class="calendar-day10 calendar-verycomplete">@#@@###@#<span class="calendar-color-g3">@</span><span class="calendar-color-g2">@</span><span class="calendar-color-u">.~~.</span><span class="calendar-color-g0">@@</span><span class="calendar-color-g1">@</span><span class="calendar-color-g3">#</span><span class="calendar-color-g0">@</span>#@@@#@##@@#@@@@@@@@@#@@#@@@@@  <span class="calendar-day">10</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
+        // clang-format on
+
+        constexpr auto startLine = R"(<a aria-label="Day)";
+        const std::string startDay = R"(span class="calendar-day">)";
+        constexpr auto twoStar = "calendar-verycomplete";
+        constexpr auto oneStar = "calendar-complete";
+
+        const auto html = (*content)();
+        auto startLinePos = html.find(startLine);
+        while(startLinePos != std::string::npos)
+        {
+            // Print pretty art
+            auto start = html.find('>', startLinePos) + 1;
+            auto end = html.find('<', start);
+            std::cout << html.substr(start, end - start);
+
+            const auto stars = [&]() -> std::string
+            {
+                const auto htmlSub = html.substr(startLinePos, start);
+                if(htmlSub.find(twoStar) != std::string::npos)
+                {
+                    return " **";
+                }
+                else if(htmlSub.find(oneStar) != std::string::npos)
+                {
+                    return " *";
+                }
+
+                return {};
+            }();
+
+            // Day number
+            start = html.find(startDay, end) + startDay.size();
+            end = html.find('<', start);
+            std::cout << " " << html.substr(start, end - start);
+
+            std::cout << stars;
+
+            std::cout << "\n";
+
+            startLinePos = html.find(startLine, start);
+        }
     }
 
     return {};
@@ -199,10 +254,9 @@ std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
     AocGetRequest request;
     request.setPage(YEAR + "/leaderboard/private/view/" + leaderBoardId);
     request.setContentType("text/html");
-    request.setBeginAndEndTags("<article>", "</article>");
+    request.setBeginAndEndTags(R"(<form method="post">)", "</form>");
     request.setSessionFilePath(SESSION_FILE);
 
-    // FIXME: This request yields nothing
     Throttler t{&request, THROTTLE_TIME,
                 GetHomePath() + "/" + std::string(DOWNLOAD_PREFIX) + "/.lastgetrequest"};
     if(const auto content = t.handleRequest())
@@ -226,7 +280,6 @@ std::string SubmitAnswer(const std::string& answer)
 
     // TODO: Use AocPostRequest::setPostContent
 
-    // FIXME: This request yields nothing
     Throttler t{&request, THROTTLE_TIME,
                 GetHomePath() + "/" + std::string(DOWNLOAD_PREFIX) + "/.lastgetrequest"};
     if(const auto content = t.handleRequest())

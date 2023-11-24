@@ -8,6 +8,8 @@ HtmlContent::HtmlContent(const std::string& content, const std::string& begin,
                          const std::string& end)
 {
     // TODO: HTML is not case sensitive, should make all tags the same case. Use libxml instead?
+    // TODO: Use regex instead? I've gone down this road with iterative regex matches and had a lot
+    // of trouble.
     if(!begin.empty() && !end.empty())
     {
         auto beginIndex = content.find(begin);
