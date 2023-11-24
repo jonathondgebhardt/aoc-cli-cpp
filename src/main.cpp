@@ -38,7 +38,8 @@ std::string GetCurrentYear()
     return {std::to_string(currentYear)};
 }
 
-// FIXME: This should be getting the last unlocked day
+// FIXME: This should be getting the last unlocked day. Not sure if I wanna make an HTTPS request
+// just for that though.
 std::string GetCurrentDay()
 {
     // https://stackoverflow.com/a/58153628
@@ -222,20 +223,20 @@ int main(int argc, char** argv)
     try
     {
         // TODO: Add a brief description
-        cxxopts::Options options{"aoc-cli", ""};
+        cxxopts::Options options{"aoc-cli", "A command line utility for Advent of Code"};
 
         // TODO: Don't blatantly copy+paste from rust aoc-cli :(
         // clang-format off
-        options.add_options()("command", "What that dog doin", cxxopts::value<std::string>()->default_value("read"));
+        options.add_options()("command", std::string(), cxxopts::value<std::string>()->default_value("read"));
         options.parse_positional({"command"});
 
         options.add_options()
-            ("y,year", "Puzzle year [default: year of current or last Advent of Code event]", cxxopts::value<std::string>()->default_value(GetCurrentYear()))
-            ("d,day", "Puzzle day [default: last unlocked day (during Advent of Code month)]", cxxopts::value<std::string>()->default_value(GetCurrentDay()))
-            ("s,session-file", "Path to session cookie file [default: ~/.adventofcode.session]", cxxopts::value<std::string>()->default_value(GetHomePath() + "/.adventofcode.session"))
+            ("y,year", "Puzzle year", cxxopts::value<std::string>()->default_value(GetCurrentYear()))
+            ("d,day", "Puzzle day", cxxopts::value<std::string>()->default_value(GetCurrentDay()))
+            ("s,session-file", "Path to session cookie file", cxxopts::value<std::string>()->default_value(GetHomePath() + "/.adventofcode.session"))
             ("i,input-only", "Download puzzle input only", cxxopts::value<bool>()->default_value("false"))
             ("p,puzzle-only", "Download puzzle description only", cxxopts::value<bool>()->default_value("false"))
-            ("w,width", "Width at which to wrap output [default: terminal width]", cxxopts::value<size_t>()->default_value("0"))
+            ("w,width", "Width at which to wrap output", cxxopts::value<size_t>()->default_value("0"))
             ("h,help", "Print help information", cxxopts::value<bool>()->default_value("false"))
             ("v,version", "Print version information", cxxopts::value<std::string>())
             ;
@@ -252,7 +253,8 @@ int main(int argc, char** argv)
                     "  download                Save puzzle description and input to files\n"
                     "  read                    Read puzzle statement (the default command)\n"
                     "  submit                  Submit puzzle answer\n"
-                    "  private-leaderboard     Show the state of a private leaderboard"
+                    "  private-leaderboard     Show the state of a private leaderboard\n\n"
+            "Options:"
         );
         // clang-format on
 
@@ -282,16 +284,19 @@ int main(int argc, char** argv)
             // Surely there's a more elegant way to do this
             if(result["input-only"].count() > 0 && result["input-only"].as<bool>())
             {
-                Printer(GetPuzzleInput(), WIDTH)();
+                // Don't enforce a width on input because that changes the meaning of the input.
+                Printer{GetPuzzleInput()}();
             }
             else if(result["puzzle-only"].count() > 0 && result["puzzle-only"].as<bool>())
             {
-                Printer(GetPuzzleDescription(), WIDTH)();
+                Printer{GetPuzzleDescription(), WIDTH}();
             }
             else
             {
-                Printer(GetPuzzleInput(), WIDTH)();
-                Printer(GetPuzzleDescription(), WIDTH)();
+                // Don't enforce a width on input because that changes the meaning of the input.
+                Printer{GetPuzzleInput()}();
+
+                Printer{GetPuzzleDescription(), WIDTH}();
             }
         }
         else if(command == "download")
@@ -315,16 +320,16 @@ int main(int argc, char** argv)
         {
             // I don't think it makes sense to allow the user to specify the width. The calendar was
             // designed for a certain width, so deal with it.
-            Printer(GetCalendar(), 0)();
+            Printer{GetCalendar()}();
         }
         else if(command == "submit")
         {
-            Printer(SubmitAnswer(std::string()), 0)();
+            Printer{SubmitAnswer(std::string())}();
         }
         else if(command == "private-leaderboard")
         {
             // TODO: Don't hardcode
-            Printer(GetPrivateLeaderBoard("192073"), 0)();
+            Printer{GetPrivateLeaderBoard("192073")}();
         }
         else
         {
@@ -332,31 +337,28 @@ int main(int argc, char** argv)
             std::cout << options.help() << "\n";
             return EXIT_FAILURE;
         }
+
+        return EXIT_SUCCESS;
     }
     catch(cxxopts::exceptions::parsing& e)
     {
         std::cerr << "Error parsing arguments: " << e.what() << "\n";
-        return EXIT_FAILURE;
     }
     catch(cxxopts::exceptions::specification& e)
     {
         std::cerr << "Error defining options: " << e.what() << "\n";
-        return EXIT_FAILURE;
     }
     catch(cxxopts::exceptions::exception& e)
     {
         std::cerr << "Error : " << e.what() << "\n";
-        return EXIT_FAILURE;
     }
     catch(std::exception& e)
     {
         std::cerr << "Error : " << e.what() << "\n";
-        return EXIT_FAILURE;
     }
     catch(...)
     {
         std::cerr << "Unknown exception\n";
-        return EXIT_FAILURE;
     }
 
     // Add getting sample input?
@@ -385,5 +387,5 @@ int main(int argc, char** argv)
     //        std::cout << "\n";
     //    }
 
-    return EXIT_SUCCESS;
+    return EXIT_FAILURE;
 }
