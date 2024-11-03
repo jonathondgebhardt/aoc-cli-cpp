@@ -35,6 +35,6 @@ private:
     AocRequestManager();
 
     std::string mSessionCookie;
-    std::string mDownloadPrefix;
+    std::string mDownloadPrefix{".aoc-cli"};
     double mWaitTime{3.0};
 };

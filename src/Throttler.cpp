@@ -20,24 +20,26 @@ namespace
 {
     //! Gets the difference between current system time and the time the file was last modified.
     //! \param file The file to check time last modified.
-    //! \return The difference.
+    //! \return The elapsed time since the last GET request.
     double GetLastGetRequestTime(const std::string& file)
     {
-        if(std::filesystem::exists(file))
+        if(!std::filesystem::exists(file))
         {
-            struct stat result;
-            if(stat(file.c_str(), &result) == 0)
-            {
-                auto mod_time = result.st_mtime;
-
-                std::time_t t = std::time(nullptr);
-                std::localtime(&t);
-
-                return difftime(t, mod_time);
-            }
+            throw std::runtime_error(std::format("can't find book-keeping file '{}'", file));
         }
 
-        return {};
+        struct stat fileStat;
+        if(const auto res = stat(file.c_str(), &fileStat); res != 0)
+        {
+            throw std::runtime_error(std::format("could not stat file '{}': {}", file, res));
+        }
+
+        auto mod_time = fileStat.st_mtime;
+
+        std::time_t t = std::time(nullptr);
+        std::localtime(&t);
+
+        return difftime(t, mod_time);
     }
 
     //! Updates the time last modified on the file.
