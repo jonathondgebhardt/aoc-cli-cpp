@@ -39,22 +39,13 @@ HttpsRequest::~HttpsRequest() noexcept
     curl_global_cleanup();
 }
 
-void HttpsRequest::setUrl(const std::string& url)
-{
-    setUrl(url.c_str());
-}
+void HttpsRequest::setUrl(const std::string& url) const { setUrl(url.c_str()); }
 
-void HttpsRequest::setUrl(const char* url)
-{
-    curl_easy_setopt(mCurl, CURLOPT_URL, url);
-}
+void HttpsRequest::setUrl(const char* url) const { curl_easy_setopt(mCurl, CURLOPT_URL, url); }
 
-void HttpsRequest::setContentType(const std::string& type)
-{
-    setContentType(type.c_str());
-}
+void HttpsRequest::setContentType(const std::string& type) const { setContentType(type.c_str()); }
 
-void HttpsRequest::setContentType(const char* type)
+void HttpsRequest::setContentType(const char* type) const
 {
     curl_slist* list = nullptr;
     const std::string content = std::string("Content-Type: ") + type;
@@ -76,6 +67,11 @@ void HttpsRequest::setSessionFilePath(const std::string& path)
     }
 }
 
+void HttpsRequest::setCookie(const std::string& cookie) const
+{
+    curl_easy_setopt(mCurl, CURLOPT_COOKIE, cookie.c_str());
+}
+
 void HttpsRequest::setBeginAndEndTags(const std::string& begin, const std::string& end)
 {
     mBegin = begin;
@@ -91,19 +87,18 @@ std::optional<HtmlContent> HttpsRequest::operator()()
 
     if(mCurl)
     {
-        auto res = curl_easy_perform(mCurl);
-        if(res == CURLE_OK)
+        if(auto res = curl_easy_perform(mCurl); res == CURLE_OK)
         {
             mGetRequested = true;
             return HtmlContent{mReadBuffer, mBegin, mEnd};
         }
         else
         {
-            std::cerr << "Could not perform HTTPS request: " << curl_easy_strerror(res) << "\n";
-
             long httpCode = 0;
             curl_easy_getinfo(mCurl, CURLINFO_RESPONSE_CODE, &httpCode);
-            std::cerr << "http code: " << httpCode;
+
+            throw std::runtime_error(std::format("Could not perform HTTPS request: {}, {}",
+                                                 curl_easy_strerror(res), httpCode));
         }
     }
     else
@@ -114,21 +109,9 @@ std::optional<HtmlContent> HttpsRequest::operator()()
     return {};
 }
 
-std::optional<HtmlContent> HttpsRequest::operator()(const std::string& begin,
-                                                    const std::string& end)
-{
-    if(const auto content = operator()())
-    {
-        return (*content)(begin, end);
-    }
-
-    return {};
-}
-
 std::string HttpsRequest::getCookie() const
 {
-    std::ifstream ifs{mSessionFilePath};
-    if(ifs.is_open())
+    if(std::ifstream ifs{mSessionFilePath}; ifs.is_open())
     {
         std::string line;
         std::getline(ifs, line);
@@ -138,13 +121,13 @@ std::string HttpsRequest::getCookie() const
     return {};
 }
 
-void HttpsRequest::useGet()
+void HttpsRequest::useGet() const
 {
     curl_easy_setopt(mCurl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(mCurl, CURLOPT_WRITEDATA, &mReadBuffer);
 }
 
-void HttpsRequest::usePost()
+void HttpsRequest::usePost() const
 {
     curl_easy_setopt(mCurl, CURLOPT_POST, 1L);
     curl_easy_setopt(mCurl, CURLOPT_READFUNCTION, WriteCallback);

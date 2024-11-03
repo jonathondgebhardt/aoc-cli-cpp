@@ -17,7 +17,6 @@ set(SOURCES
     HtmlContent.cpp
     Printer.cpp
     HtmlFormatter.cpp
-    AocHttpsRequest.cpp
     Throttler.cpp
 )
 

@@ -3,10 +3,6 @@
 #include <iostream>
 #include <regex>
 
-Printer::Printer(const std::string& content, size_t width) : mContent(content), mWidth(width)
-{
-}
-
 void Printer::operator()() const
 {
     if(mWidth == 0)
@@ -15,7 +11,7 @@ void Printer::operator()() const
     }
     else
     {
-        size_t begin = 0;
+        decltype(mContent.size()) begin = 0;
         while(begin < mContent.size())
         {
             auto line = mContent.substr(begin, mWidth);

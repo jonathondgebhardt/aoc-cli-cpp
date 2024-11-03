@@ -1,8 +1,10 @@
 #include <cstdlib>
 #include <cxxopts.hpp>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <iostream>
+#include <print>
 #include <regex>
 
 #include "AocHttpsRequest.hpp"
@@ -12,15 +14,18 @@
 #include "Printer.hpp"
 #include "Throttler.hpp"
 
-const char* DOWNLOAD_PREFIX = ".aoc-cli";
-const char* INPUT_PREFIX = "input";
-const char* PUZZLE_PREFIX = "puzzle";
+namespace
+{
+    const char* DOWNLOAD_PREFIX = ".aoc-cli";
+    const char* INPUT_PREFIX = "input";
+    const char* PUZZLE_PREFIX = "puzzle";
 
-size_t WIDTH = 0;
-double THROTTLE_TIME = 3.0;
-std::string YEAR;
-std::string DAY;
-std::string SESSION_FILE;
+    size_t WIDTH = 0;
+    double THROTTLE_TIME = 3.0;
+    std::string YEAR;
+    std::string DAY;
+    std::string SESSION_FILE;
+}
 
 std::string GetCurrentYear()
 {
@@ -89,6 +94,7 @@ bool CreateIfDoesNotExist(const std::filesystem::path& path)
         catch(...)
         {
             std::cerr << "Could not create directory '" << path << "'\n";
+            // std::println(std::cerr, "Could not create directory '{}'", path);
         }
     }
 
@@ -99,14 +105,14 @@ std::string ReadOrDownload(const std::string& file, HttpsRequest* request)
 {
     if(std::filesystem::exists(file))
     {
-        std::cout << "File '" << file << "' found on the system\n";
+        std::println("File '{}' found on system", file);
         return ReadFileIntoString(file);
     }
 
-    std::cout << "File '" << file << "' not found on the system, downloading...\n";
+    std::println("File '{}' not found on system, downloading...", file);
 
     Throttler t{request, THROTTLE_TIME,
-                GetHomePath() + "/" + std::string(DOWNLOAD_PREFIX) + "/.lastgetrequest"};
+                std::format("{}/{}/.lastgetrequest", GetHomePath(), DOWNLOAD_PREFIX)};
     if(const auto content = t.handleRequest())
     {
         HtmlFormatter plain{*content};
@@ -115,7 +121,7 @@ std::string ReadOrDownload(const std::string& file, HttpsRequest* request)
         {
             CreateIfDoesNotExist(std::filesystem::path{file}.parent_path());
 
-            std::cout << "Downloaded '" << file << "'\n";
+            std::println("Downloaded '{}'", file);
             std::ofstream ofs{file};
             ofs << plain() << "\n";
         }
@@ -128,28 +134,26 @@ std::string ReadOrDownload(const std::string& file, HttpsRequest* request)
 
 std::string GetPuzzleDescription()
 {
-    const auto home = GetHomePath();
-    const auto puzzle = home + "/" + DOWNLOAD_PREFIX + "/" + PUZZLE_PREFIX + "/" + DAY + ".txt";
-
     AocGetRequest request;
-    request.setPage(YEAR + "/day/" + DAY);
+    request.setPage(std::format("{}/day/{}", YEAR, DAY));
     request.setContentType("text/html");
     request.setSessionFilePath(SESSION_FILE);
     request.setBeginAndEndTags(R"(<article class="day-desc">)", "</article>");
 
+    const auto puzzle =
+        std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, PUZZLE_PREFIX, DAY);
     return ReadOrDownload(puzzle, &request);
 }
 
 std::string GetPuzzleInput()
 {
-    const auto home = GetHomePath();
-    const auto input = home + "/" + DOWNLOAD_PREFIX + "/" + INPUT_PREFIX + "/" + DAY + ".txt";
-
     AocGetRequest request;
     request.setPage(YEAR + "/day/" + DAY + "/input");
     request.setContentType("text/plain");
     request.setSessionFilePath(SESSION_FILE);
 
+    const auto input =
+        std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
     return ReadOrDownload(input, &request);
 }
 
@@ -159,16 +163,14 @@ std::string GetPuzzleInput()
 // the filesystem? Should I care??
 std::string GetPuzzleInputSample()
 {
-    const auto home = GetHomePath();
-    const auto puzzle =
-        home + "/" + DOWNLOAD_PREFIX + "/" + INPUT_PREFIX + "/" + DAY + "_sample.txt";
-
     AocGetRequest request;
     request.setPage(YEAR + "/day/" + DAY);
     request.setContentType("text/html");
     request.setSessionFilePath(SESSION_FILE);
     request.setBeginAndEndTags("<pre><code>", "</code></pre>");
 
+    const auto puzzle =
+        std::format("{}/{}/{}/{}_sample.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
     return ReadOrDownload(puzzle, &request);
 }
 
@@ -193,7 +195,8 @@ std::string GetCalendar()
     request.setSessionFilePath(SESSION_FILE);
 
     Throttler t{&request, THROTTLE_TIME,
-                GetHomePath() + "/" + std::string(DOWNLOAD_PREFIX) + "/.lastgetrequest"};
+                std::format("{}/{}/.lastgetrequest", GetHomePath(), DOWNLOAD_PREFIX)};
+
     if(const auto content = t.handleRequest())
     {
         // HtmlFormatter plain{*content};
@@ -205,7 +208,6 @@ std::string GetCalendar()
         // clang-format on
 
         constexpr auto startLine = R"(<a aria-label="Day)";
-        const std::string startDay = R"(span class="calendar-day">)";
         constexpr auto twoStar = "calendar-verycomplete";
         constexpr auto oneStar = "calendar-complete";
 
@@ -234,13 +236,11 @@ std::string GetCalendar()
             }();
 
             // Day number
+            const std::string startDay = R"(span class="calendar-day">)";
             start = html.find(startDay, end) + startDay.size();
             end = html.find('<', start);
-            std::cout << " " << html.substr(start, end - start);
-
-            std::cout << stars;
-
-            std::cout << "\n";
+            std::println(" {}", html.substr(start, end - start));
+            std::println("{}", stars);
 
             startLinePos = html.find(startLine, start);
         }
@@ -252,13 +252,13 @@ std::string GetCalendar()
 std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
 {
     AocGetRequest request;
-    request.setPage(YEAR + "/leaderboard/private/view/" + leaderBoardId);
+    request.setPage(std::format("{}/leaderboard/private/view/{}", YEAR, leaderBoardId));
     request.setContentType("text/html");
     request.setBeginAndEndTags(R"(<form method="post">)", "</form>");
     request.setSessionFilePath(SESSION_FILE);
 
     Throttler t{&request, THROTTLE_TIME,
-                GetHomePath() + "/" + std::string(DOWNLOAD_PREFIX) + "/.lastgetrequest"};
+                std::format("{}/{}/.lastgetrequest", GetHomePath(), DOWNLOAD_PREFIX)};
     if(const auto content = t.handleRequest())
     {
         HtmlFormatter plain{*content};
@@ -281,7 +281,7 @@ std::string SubmitAnswer(const std::string& answer)
     // TODO: Use AocPostRequest::setPostContent
 
     Throttler t{&request, THROTTLE_TIME,
-                GetHomePath() + "/" + std::string(DOWNLOAD_PREFIX) + "/.lastgetrequest"};
+                std::format("{}/{}/.lastgetrequest", GetHomePath(), DOWNLOAD_PREFIX)};
     if(const auto content = t.handleRequest())
     {
         return (*content)();

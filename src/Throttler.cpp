@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <print>
 #include <thread>
 
 #include <sys/stat.h>
@@ -17,6 +18,9 @@
 
 namespace
 {
+    //! Gets the difference between current system time and the time the file was last modified.
+    //! \param file The file to check time last modified.
+    //! \return The difference.
     double GetLastGetRequestTime(const std::string& file)
     {
         if(std::filesystem::exists(file))
@@ -36,6 +40,8 @@ namespace
         return {};
     }
 
+    //! Updates the time last modified on the file.
+    //! \param file The file.
     void TouchFile(const std::string& file)
     {
         if(std::filesystem::exists(file))
@@ -48,19 +54,13 @@ namespace
     }
 }
 
-Throttler::Throttler(HttpsRequest* request, double time, const std::string& file)
-    : mRequest(request), mTime(time), mFile(file)
-{
-}
-
 std::optional<HtmlContent> Throttler::handleRequest()
 {
-    const auto delta = mTime - GetLastGetRequestTime(mFile);
-    if(delta > 0.0)
+    if(const auto delta = mTime - GetLastGetRequestTime(mFile); delta > 0.0)
     {
-        std::cout
-            << "In an effort to prevent overloading AoC servers, waiting to perform HTTPS request ("
-            << delta << " seconds)\n";
+        std::println("In an effort to prevent overloading AoC servers, waiting to perform HTTPS "
+                     "request ({} seconds)",
+                     delta);
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<long>(delta)));
     }
 

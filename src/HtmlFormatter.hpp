@@ -1,19 +1,19 @@
 #pragma once
 
+#include <sstream>
 #include <vector>
 
 #include "HtmlContent.hpp"
-#include <sstream>
 
-//! Extracts all plain text from HtmlContent and attempts to format it with operator().
+//! \brief Extracts all plain text from HtmlContent and attempts to format it with operator().
 class HtmlFormatter
 {
 public:
-    //! Extracts plain text from the HtmlContent. HtmlContent should be valid HTML.
+    //! \brief Extracts plain text from the HtmlContent. HtmlContent should be valid HTML.
     explicit HtmlFormatter(const HtmlContent& content);
 
-    //! Yields formatted plain text.
-    std::string operator()();
+    //! \brief Yields formatted plain text.
+    std::string operator()() { return mStream.str(); }
 
 private:
     std::stringstream mStream;

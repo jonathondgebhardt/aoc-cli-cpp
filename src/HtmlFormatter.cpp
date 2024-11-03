@@ -94,8 +94,3 @@ HtmlFormatter::HtmlFormatter(const HtmlContent& content)
         xmlFreeDoc(doc);
     }
 }
-
-std::string HtmlFormatter::operator()()
-{
-    return mStream.str();
-}

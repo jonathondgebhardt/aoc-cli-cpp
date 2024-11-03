@@ -1,9 +1,5 @@
 #include "HtmlContent.hpp"
 
-HtmlContent::HtmlContent(const std::string& content) : mContent(content)
-{
-}
-
 HtmlContent::HtmlContent(const std::string& content, const std::string& begin,
                          const std::string& end)
 {
@@ -33,11 +29,6 @@ HtmlContent::HtmlContent(const std::string& content, const std::string& begin,
     {
         mContent = content;
     }
-}
-
-std::string HtmlContent::operator()() const
-{
-    return mContent;
 }
 
 HtmlContent HtmlContent::operator()(const std::string& begin, const std::string& end) const
