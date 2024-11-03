@@ -15,6 +15,12 @@ public:
     //! \brief Yields formatted plain text.
     std::string operator()() { return mStream.str(); }
 
+    static std::string Format(const HtmlContent& content)
+    {
+        HtmlFormatter formatter{content};
+        return formatter();
+    }
+
 private:
     std::stringstream mStream;
 };

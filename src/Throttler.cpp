@@ -54,7 +54,7 @@ namespace
     }
 }
 
-std::optional<HtmlContent> Throttler::handleRequest()
+HtmlContent Throttler::handleRequest()
 {
     if(const auto delta = mTime - GetLastGetRequestTime(mFile); delta > 0.0)
     {

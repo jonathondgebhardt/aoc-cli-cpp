@@ -24,7 +24,7 @@ public:
     ~Throttler() noexcept = default;
 
     //! \brief If necessary, waits the amount of time, then makes the request.
-    std::optional<HtmlContent> handleRequest();
+    HtmlContent handleRequest();
 
 private:
     HttpsRequest* mRequest{nullptr};

@@ -24,9 +24,6 @@ public:
     void setContentType(const std::string& type) const;
     void setContentType(const char* type) const;
 
-    // TODO: Delete me.
-    void setSessionFilePath(const std::string& path);
-
     //! \brief Set the cookie.
     void setCookie(const std::string& cookie) const;
 
@@ -36,7 +33,7 @@ public:
 
     //! \brief Perform the request.
     //! Only performs a request once.
-    std::optional<HtmlContent> operator()();
+    HtmlContent operator()();
 
 protected:
     //! \brief Use GET.
@@ -48,9 +45,6 @@ protected:
     CURL* mCurl = nullptr;
 
 private:
-    // TODO: Delete me.
-    std::string getCookie() const;
-
     std::string mReadBuffer;
     std::string mSessionFilePath;
     std::string mBegin;

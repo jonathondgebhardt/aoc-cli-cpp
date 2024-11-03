@@ -15,9 +15,12 @@ namespace
 
 HttpsRequest::HttpsRequest()
 {
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-
     mCurl = curl_easy_init();
+
+    if(!mCurl)
+    {
+        throw std::runtime_error("failed to initialize CURL environment");
+    }
 
     // Disable progress bar
     curl_easy_setopt(mCurl, CURLOPT_NOPROGRESS, 1L);
@@ -35,8 +38,6 @@ HttpsRequest::~HttpsRequest() noexcept
     {
         curl_easy_cleanup(mCurl);
     }
-
-    curl_global_cleanup();
 }
 
 void HttpsRequest::setUrl(const std::string& url) const { setUrl(url.c_str()); }
@@ -53,20 +54,6 @@ void HttpsRequest::setContentType(const char* type) const
     curl_easy_setopt(mCurl, CURLOPT_HTTPHEADER, list);
 }
 
-void HttpsRequest::setSessionFilePath(const std::string& path)
-{
-    mSessionFilePath = path;
-
-    if(const auto cookie = getCookie(); !cookie.empty())
-    {
-        curl_easy_setopt(mCurl, CURLOPT_COOKIE, cookie.c_str());
-    }
-    else
-    {
-        std::cerr << "Could not load session file: " << path << "\n";
-    }
-}
-
 void HttpsRequest::setCookie(const std::string& cookie) const
 {
     curl_easy_setopt(mCurl, CURLOPT_COOKIE, cookie.c_str());
@@ -78,47 +65,26 @@ void HttpsRequest::setBeginAndEndTags(const std::string& begin, const std::strin
     mEnd = end;
 }
 
-std::optional<HtmlContent> HttpsRequest::operator()()
+HtmlContent HttpsRequest::operator()()
 {
     if(!mReadBuffer.empty() && mGetRequested)
     {
         return HtmlContent{mReadBuffer};
     }
 
-    if(mCurl)
+    if(auto res = curl_easy_perform(mCurl); res == CURLE_OK)
     {
-        if(auto res = curl_easy_perform(mCurl); res == CURLE_OK)
-        {
-            mGetRequested = true;
-            return HtmlContent{mReadBuffer, mBegin, mEnd};
-        }
-        else
-        {
-            long httpCode = 0;
-            curl_easy_getinfo(mCurl, CURLINFO_RESPONSE_CODE, &httpCode);
-
-            throw std::runtime_error(std::format("Could not perform HTTPS request: {}, {}",
-                                                 curl_easy_strerror(res), httpCode));
-        }
+        mGetRequested = true;
+        return HtmlContent{mReadBuffer, mBegin, mEnd};
     }
     else
     {
-        std::cerr << "Could initialize CURL environment\n";
+        long httpCode = 0;
+        curl_easy_getinfo(mCurl, CURLINFO_RESPONSE_CODE, &httpCode);
+
+        throw std::runtime_error(std::format("could not perform HTTPS request: {}, {}",
+                                             curl_easy_strerror(res), httpCode));
     }
-
-    return {};
-}
-
-std::string HttpsRequest::getCookie() const
-{
-    if(std::ifstream ifs{mSessionFilePath}; ifs.is_open())
-    {
-        std::string line;
-        std::getline(ifs, line);
-        return "session=" + line;
-    }
-
-    return {};
 }
 
 void HttpsRequest::useGet() const

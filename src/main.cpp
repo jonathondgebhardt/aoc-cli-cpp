@@ -8,128 +8,25 @@
 #include <regex>
 
 #include "AocHttpsRequest.hpp"
+#include "AocRequestManager.hpp"
 #include "HtmlContent.hpp"
 #include "HtmlFormatter.hpp"
 #include "HttpsRequest.hpp"
 #include "Printer.hpp"
-#include "Throttler.hpp"
+#include "System.hpp"
 
 namespace
 {
+    AocRequestManager REQUEST_MANAGER = AocRequestManager::Instance();
+
     const char* DOWNLOAD_PREFIX = ".aoc-cli";
     const char* INPUT_PREFIX = "input";
     const char* PUZZLE_PREFIX = "puzzle";
 
     size_t WIDTH = 0;
-    double THROTTLE_TIME = 3.0;
     std::string YEAR;
     std::string DAY;
     std::string SESSION_FILE;
-}
-
-std::string GetCurrentYear()
-{
-    // https://stackoverflow.com/a/58153628
-    std::time_t t = std::time(nullptr);
-    std::tm* const pTInfo = std::localtime(&t);
-
-    auto currentYear = 1900 + pTInfo->tm_year;
-
-    // AoC starts December 1st. If it's not December yet, use last year.
-    if(pTInfo->tm_mon < 11)
-    {
-        --currentYear;
-    }
-
-    return {std::to_string(currentYear)};
-}
-
-// FIXME: This should be getting the last unlocked day. Not sure if I wanna make an HTTPS request
-// just for that though.
-std::string GetCurrentDay()
-{
-    // https://stackoverflow.com/a/58153628
-    std::time_t t = std::time(nullptr);
-    std::tm* const pTInfo = std::localtime(&t);
-    return {std::to_string(pTInfo->tm_mday)};
-}
-
-std::string GetHomePath()
-{
-#ifdef WIN32
-    //  TODO: Test this
-    if(const auto homeDrive = std::getenv("HOMEDRIVE"))
-    {
-        if(const auto homePath = std::getenv("HOMEPATH"))
-        {
-            // Surely there's a more elegant way to do this.
-            return std::string(homeDrive) + "/" + std::string(homePath);
-        }
-    }
-#else
-    return std::getenv("HOME");
-#endif
-}
-
-std::string ReadFileIntoString(const std::string& file)
-{
-    if(std::filesystem::exists(file))
-    {
-        std::ifstream t(file);
-        return {(std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>()};
-    }
-
-    return {};
-}
-
-bool CreateIfDoesNotExist(const std::filesystem::path& path)
-{
-    if(!std::filesystem::exists(path))
-    {
-        try
-        {
-            std::filesystem::create_directories(path);
-            return true;
-        }
-        catch(...)
-        {
-            std::cerr << "Could not create directory '" << path << "'\n";
-            // std::println(std::cerr, "Could not create directory '{}'", path);
-        }
-    }
-
-    return false;
-}
-
-std::string ReadOrDownload(const std::string& file, HttpsRequest* request)
-{
-    if(std::filesystem::exists(file))
-    {
-        std::println("File '{}' found on system", file);
-        return ReadFileIntoString(file);
-    }
-
-    std::println("File '{}' not found on system, downloading...", file);
-
-    Throttler t{request, THROTTLE_TIME,
-                std::format("{}/{}/.lastgetrequest", GetHomePath(), DOWNLOAD_PREFIX)};
-    if(const auto content = t.handleRequest())
-    {
-        HtmlFormatter plain{*content};
-
-        if(const auto home = GetHomePath(); !home.empty())
-        {
-            CreateIfDoesNotExist(std::filesystem::path{file}.parent_path());
-
-            std::println("Downloaded '{}'", file);
-            std::ofstream ofs{file};
-            ofs << plain() << "\n";
-        }
-
-        return plain();
-    }
-
-    return {};
 }
 
 std::string GetPuzzleDescription()
@@ -137,12 +34,11 @@ std::string GetPuzzleDescription()
     AocGetRequest request;
     request.setPage(std::format("{}/day/{}", YEAR, DAY));
     request.setContentType("text/html");
-    request.setSessionFilePath(SESSION_FILE);
     request.setBeginAndEndTags(R"(<article class="day-desc">)", "</article>");
 
     const auto puzzle =
         std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, PUZZLE_PREFIX, DAY);
-    return ReadOrDownload(puzzle, &request);
+    return REQUEST_MANAGER.readOrDownload(puzzle, &request);
 }
 
 std::string GetPuzzleInput()
@@ -150,11 +46,10 @@ std::string GetPuzzleInput()
     AocGetRequest request;
     request.setPage(YEAR + "/day/" + DAY + "/input");
     request.setContentType("text/plain");
-    request.setSessionFilePath(SESSION_FILE);
 
     const auto input =
         std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
-    return ReadOrDownload(input, &request);
+    return REQUEST_MANAGER.readOrDownload(input, &request);
 }
 
 // FIXME: Make caching more intelligent.
@@ -166,12 +61,11 @@ std::string GetPuzzleInputSample()
     AocGetRequest request;
     request.setPage(YEAR + "/day/" + DAY);
     request.setContentType("text/html");
-    request.setSessionFilePath(SESSION_FILE);
     request.setBeginAndEndTags("<pre><code>", "</code></pre>");
 
     const auto puzzle =
         std::format("{}/{}/{}/{}_sample.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
-    return ReadOrDownload(puzzle, &request);
+    return REQUEST_MANAGER.readOrDownload(puzzle, &request);
 }
 
 // FIXME: The calendar retrieved by this function makes it look like you've solved every problem.
@@ -192,60 +86,59 @@ std::string GetCalendar()
     request.setPage(YEAR);
     request.setContentType("text/html");
     request.setBeginAndEndTags(R"(<pre class="calendar">)", "</pre>");
-    request.setSessionFilePath(SESSION_FILE);
 
-    Throttler t{&request, THROTTLE_TIME,
-                std::format("{}/{}/.lastgetrequest", GetHomePath(), DOWNLOAD_PREFIX)};
+    const auto content = REQUEST_MANAGER.doRequest(&request);
 
-    if(const auto content = t.handleRequest())
-    {
-        // HtmlFormatter plain{*content};
-        // return plain();
-        // clang-format off
+    // Throttler t{&request, THROTTLE_TIME,
+    //             std::format("{}/{}/.lastgetrequest", GetHomePath(), DOWNLOAD_PREFIX)};
+
+    // HtmlFormatter plain{*content};
+    // return plain();
+    // clang-format off
 // <a aria-label="Day 12" href="/2022/day/12" class="calendar-day12">@@@@@@@###@@@#@@@@@@@@@@#@@##@@@#@@#@@#@#@@@@@@#@  <span class="calendar-day">12</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
 // <a aria-label="Day 11, one star" href="/2022/day/11" class="calendar-day11 calendar-complete">#@##@#@@@@##.~~.@@@@##@@@@@@##@@@##@#@@@####@@@#@  <span class="calendar-day">11</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
 // <a aria-label="Day 10, two stars" href="/2022/day/10" class="calendar-day10 calendar-verycomplete">@#@@###@#<span class="calendar-color-g3">@</span><span class="calendar-color-g2">@</span><span class="calendar-color-u">.~~.</span><span class="calendar-color-g0">@@</span><span class="calendar-color-g1">@</span><span class="calendar-color-g3">#</span><span class="calendar-color-g0">@</span>#@@@#@##@@#@@@@@@@@@#@@#@@@@@  <span class="calendar-day">10</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
-        // clang-format on
+    // clang-format on
 
-        constexpr auto startLine = R"(<a aria-label="Day)";
-        constexpr auto twoStar = "calendar-verycomplete";
-        constexpr auto oneStar = "calendar-complete";
+    constexpr auto startLine = R"(<a aria-label="Day)";
+    constexpr auto twoStar = "calendar-verycomplete";
+    constexpr auto oneStar = "calendar-complete";
 
-        const auto html = (*content)();
-        auto startLinePos = html.find(startLine);
-        while(startLinePos != std::string::npos)
+    const auto html = content();
+    auto startLinePos = html.find(startLine);
+    while(startLinePos != std::string::npos)
+    {
+        // Print pretty art
+        auto start = html.find('>', startLinePos) + 1;
+        auto end = html.find('<', start);
+        std::cout << html.substr(start, end - start);
+
+        const auto stars = [&]() -> std::string
         {
-            // Print pretty art
-            auto start = html.find('>', startLinePos) + 1;
-            auto end = html.find('<', start);
-            std::cout << html.substr(start, end - start);
-
-            const auto stars = [&]() -> std::string
+            const auto htmlSub = html.substr(startLinePos, start);
+            if(htmlSub.find(twoStar) != std::string::npos)
             {
-                const auto htmlSub = html.substr(startLinePos, start);
-                if(htmlSub.find(twoStar) != std::string::npos)
-                {
-                    return " **";
-                }
-                else if(htmlSub.find(oneStar) != std::string::npos)
-                {
-                    return " *";
-                }
+                return " **";
+            }
+            else if(htmlSub.find(oneStar) != std::string::npos)
+            {
+                return " *";
+            }
 
-                return {};
-            }();
+            return {};
+        }();
 
-            // Day number
-            const std::string startDay = R"(span class="calendar-day">)";
-            start = html.find(startDay, end) + startDay.size();
-            end = html.find('<', start);
-            std::println(" {}", html.substr(start, end - start));
-            std::println("{}", stars);
+        // Day number
+        const std::string startDay = R"(span class="calendar-day">)";
+        start = html.find(startDay, end) + startDay.size();
+        end = html.find('<', start);
+        std::println(" {}", html.substr(start, end - start));
+        std::println("{}", stars);
 
-            startLinePos = html.find(startLine, start);
-        }
+        startLinePos = html.find(startLine, start);
     }
 
+    // FIXME: Should this be returning anything? Incomplete.
     return {};
 }
 
@@ -255,17 +148,9 @@ std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
     request.setPage(std::format("{}/leaderboard/private/view/{}", YEAR, leaderBoardId));
     request.setContentType("text/html");
     request.setBeginAndEndTags(R"(<form method="post">)", "</form>");
-    request.setSessionFilePath(SESSION_FILE);
 
-    Throttler t{&request, THROTTLE_TIME,
-                std::format("{}/{}/.lastgetrequest", GetHomePath(), DOWNLOAD_PREFIX)};
-    if(const auto content = t.handleRequest())
-    {
-        HtmlFormatter plain{*content};
-        return plain();
-    }
-
-    return {};
+    const auto content = REQUEST_MANAGER.doRequest(&request);
+    return HtmlFormatter::Format(content);
 }
 
 std::string SubmitAnswer(const std::string& answer)
@@ -276,18 +161,12 @@ std::string SubmitAnswer(const std::string& answer)
     request.setPage("2022/day/12/answer");
 
     request.setContentType("application/x-www-form-urlencoded");
-    request.setSessionFilePath(SESSION_FILE);
+    // request.setSessionFilePath(SESSION_FILE);
 
     // TODO: Use AocPostRequest::setPostContent
 
-    Throttler t{&request, THROTTLE_TIME,
-                std::format("{}/{}/.lastgetrequest", GetHomePath(), DOWNLOAD_PREFIX)};
-    if(const auto content = t.handleRequest())
-    {
-        return (*content)();
-    }
-
-    return {};
+    const auto content = REQUEST_MANAGER.doRequest(&request);
+    return content();
 }
 
 int main(int argc, char** argv)
@@ -344,6 +223,7 @@ int main(int argc, char** argv)
         WIDTH = result["width"].as<size_t>();
 
         SESSION_FILE = result["session-file"].as<std::string>();
+        REQUEST_MANAGER.setSessionFile(SESSION_FILE);
 
         // TODO: Make sure YEAR and DAY are within sensible bounds
         // If year is not provided, assume it's this year or the previous year's AoC if it's not yet
