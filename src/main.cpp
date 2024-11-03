@@ -142,7 +142,31 @@ std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
     request.setBeginAndEndTags(R"(<form method="post">)", "</form>");
 
     const auto content = REQUEST_MANAGER.doRequest(&request);
-    return HtmlFormatter::Format(content);
+    auto html = HtmlFormatter::Format(content);
+
+    // Not an ideal solution, but it works for now.
+
+    // Remove header that gets formatted incorrectly.
+    const std::string daysHeader = "12345678910111213141516171819202122232425";
+    html.erase(html.find(daysHeader), daysHeader.size());
+
+    // Remove day status that gets formatted incorrectly.
+    const std::string stars = "*************************  ";
+    auto idx = html.find(stars);
+    while(idx != std::string::npos)
+    {
+        html.erase(idx, stars.size());
+        idx = html.find(stars);
+    }
+
+    // Remove preceding whitespace.
+    const std::string whitespace = "\n      \n";
+    if(const auto idx = html.find(whitespace); idx != std::string::npos)
+    {
+        html.erase(idx, whitespace.size());
+    }
+
+    return html;
 }
 
 std::string SubmitAnswer(const std::string& answer)
