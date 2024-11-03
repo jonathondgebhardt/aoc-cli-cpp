@@ -175,9 +175,8 @@ std::string SubmitAnswer(const std::string& answer)
 
     // TODO: Don't hardcode
     request.setPage("2022/day/12/answer");
-
-    request.setContentType("application/x-www-form-urlencoded");
-    // request.setSessionFilePath(SESSION_FILE);
+    // request.setContentType("application/x-www-form-urlencoded");
+    request.setPostContent(std::format("level={}&answer={}", 1, 42));
 
     // TODO: Use AocPostRequest::setPostContent
 

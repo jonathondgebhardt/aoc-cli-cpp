@@ -96,6 +96,6 @@ void HttpsRequest::useGet() const
 void HttpsRequest::usePost() const
 {
     curl_easy_setopt(mCurl, CURLOPT_POST, 1L);
-    curl_easy_setopt(mCurl, CURLOPT_READFUNCTION, WriteCallback);
-    curl_easy_setopt(mCurl, CURLOPT_READDATA, &mReadBuffer);
+    curl_easy_setopt(mCurl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(mCurl, CURLOPT_WRITEDATA, &mReadBuffer);
 }
