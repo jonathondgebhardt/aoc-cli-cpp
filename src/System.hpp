@@ -21,6 +21,8 @@ static inline std::string GetHomePath()
 #endif
 }
 
+// If year is not provided, assume it's this year or the previous year's AoC if it's not yet
+// December.
 static inline std::string GetCurrentYear()
 {
     // https://stackoverflow.com/a/58153628

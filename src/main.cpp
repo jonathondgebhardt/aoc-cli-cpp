@@ -29,6 +29,22 @@ namespace
     std::string SESSION_FILE;
 }
 
+void ValidateYear()
+{
+    if(const auto year = std::stoi(YEAR); year < 2015 || year > std::stoi(GetCurrentYear()))
+    {
+        throw std::runtime_error(std::format("invalid year: {}", year));
+    }
+}
+
+void ValidateDay()
+{
+    if(const auto day = std::stoi(DAY); day < 0 || day > 25)
+    {
+        throw std::runtime_error(std::format("invalid day: {}", day));
+    }
+}
+
 std::string GetPuzzleDescription()
 {
     AocGetRequest request;
@@ -238,13 +254,12 @@ int main(int argc, char** argv)
         SESSION_FILE = result["session-file"].as<std::string>();
         REQUEST_MANAGER.setSessionFile(SESSION_FILE);
 
-        // TODO: Make sure YEAR and DAY are within sensible bounds
-        // If year is not provided, assume it's this year or the previous year's AoC if it's not yet
-        // December.
         YEAR = result["year"].as<std::string>();
+        ValidateYear();
 
         // If day is not provided, assume it's the last day completed by the user.
         DAY = result["day"].as<std::string>();
+        ValidateDay();
 
         if(command == "read")
         {
