@@ -24,7 +24,7 @@ namespace
     const char* PUZZLE_PREFIX = "puzzle";
 
     size_t WIDTH = 0;
-    std::string YEAR;
+    std::string YEAR; // TODO: Allow this to be defined with a preprocessor directive?
     std::string DAY;
     std::string SESSION_FILE;
 }
@@ -88,58 +88,50 @@ std::string GetCalendar()
     request.setBeginAndEndTags(R"(<pre class="calendar">)", "</pre>");
 
     const auto content = REQUEST_MANAGER.doRequest(&request);
-
-    // Throttler t{&request, THROTTLE_TIME,
-    //             std::format("{}/{}/.lastgetrequest", GetHomePath(), DOWNLOAD_PREFIX)};
-
-    // HtmlFormatter plain{*content};
-    // return plain();
-    // clang-format off
-// <a aria-label="Day 12" href="/2022/day/12" class="calendar-day12">@@@@@@@###@@@#@@@@@@@@@@#@@##@@@#@@#@@#@#@@@@@@#@  <span class="calendar-day">12</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
-// <a aria-label="Day 11, one star" href="/2022/day/11" class="calendar-day11 calendar-complete">#@##@#@@@@##.~~.@@@@##@@@@@@##@@@##@#@@@####@@@#@  <span class="calendar-day">11</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
-// <a aria-label="Day 10, two stars" href="/2022/day/10" class="calendar-day10 calendar-verycomplete">@#@@###@#<span class="calendar-color-g3">@</span><span class="calendar-color-g2">@</span><span class="calendar-color-u">.~~.</span><span class="calendar-color-g0">@@</span><span class="calendar-color-g1">@</span><span class="calendar-color-g3">#</span><span class="calendar-color-g0">@</span>#@@@#@##@@#@@@@@@@@@#@@#@@@@@  <span class="calendar-day">10</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
-    // clang-format on
-
-    constexpr auto startLine = R"(<a aria-label="Day)";
-    constexpr auto twoStar = "calendar-verycomplete";
-    constexpr auto oneStar = "calendar-complete";
-
     const auto html = content();
-    auto startLinePos = html.find(startLine);
-    while(startLinePos != std::string::npos)
+
+    std::array<std::string, 25> dayStatus;
+    std::regex days{"class=\"calendar-day(\\d{1,2})(\\s?.*?)\">"};
+    for(auto i = std::sregex_iterator(html.begin(), html.end(), days), end = std::sregex_iterator();
+        i != end; ++i)
     {
-        // Print pretty art
-        auto start = html.find('>', startLinePos) + 1;
-        auto end = html.find('<', start);
-        std::cout << html.substr(start, end - start);
+        const auto match = *i;
+        if(match.size() < 2)
+        {
+            throw std::runtime_error(std::format("unexpected regex result: {}", match.str()));
+        }
+
+        const auto dayNumber = static_cast<std::size_t>(std::stoi(match[1].str())) - 1;
+        if(dayNumber > 25)
+        {
+            throw std::runtime_error(std::format("unexpected day number: {}", dayNumber));
+        }
 
         const auto stars = [&]() -> std::string
         {
-            const auto htmlSub = html.substr(startLinePos, start);
-            if(htmlSub.find(twoStar) != std::string::npos)
+            if(match[2].str() == " calendar-verycomplete")
             {
-                return " **";
+                return "**";
             }
-            else if(htmlSub.find(oneStar) != std::string::npos)
+            else if(match[2].str() == " calendar-complete")
             {
-                return " *";
+                return "*";
             }
 
             return {};
         }();
 
-        // Day number
-        const std::string startDay = R"(span class="calendar-day">)";
-        start = html.find(startDay, end) + startDay.size();
-        end = html.find('<', start);
-        std::println(" {}", html.substr(start, end - start));
-        std::println("{}", stars);
-
-        startLinePos = html.find(startLine, start);
+        dayStatus[dayNumber] = stars;
     }
 
-    // FIXME: Should this be returning anything? Incomplete.
-    return {};
+    std::stringstream ss;
+    for(auto day = 1; const auto& stars : dayStatus)
+    {
+        ss << std::setw(2) << day << ": " << stars << "\n";
+        ++day;
+    }
+
+    return ss.str();
 }
 
 std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
@@ -239,6 +231,8 @@ int main(int argc, char** argv)
             if(result["input-only"].count() > 0 && result["input-only"].as<bool>())
             {
                 // Don't enforce a width on input because that changes the meaning of the input.
+                // TODO: Check for the following string
+                // Puzzle inputs differ by user.  Please log in to get your puzzle input.
                 Printer{GetPuzzleInput()}();
             }
             else if(result["sample-only"].count() > 0 && result["sample-only"].as<bool>())
