@@ -31,7 +31,12 @@ public:
 
     void setPostContent(const std::string& content)
     {
-        // curl_easy_setopt(mCurl, CURLOPT_POSTFIELDS, content.c_str());
-        curl_easy_setopt(mCurl, CURLOPT_COPYPOSTFIELDS, content.c_str());
+        // Copy the post content to guarantee no lifetime issues. CURLOPT_POSTFIELDS does not copy
+        // the post content.
+        mPostContent = content;
+        curl_easy_setopt(mCurl, CURLOPT_POSTFIELDS, mPostContent.c_str());
     }
+
+private:
+    std::string mPostContent;
 };

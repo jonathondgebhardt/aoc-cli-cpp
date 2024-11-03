@@ -174,14 +174,12 @@ std::string SubmitAnswer(const std::string& answer)
     AocPostRequest request;
 
     // TODO: Don't hardcode
-    request.setPage("2022/day/12/answer");
-    // request.setContentType("application/x-www-form-urlencoded");
+    request.setPage(std::format("{}/day/{}/answer", YEAR, DAY));
+    request.setBeginAndEndTags("<main>", R"(</main>)");
     request.setPostContent(std::format("level={}&answer={}", 1, 42));
 
-    // TODO: Use AocPostRequest::setPostContent
-
     const auto content = REQUEST_MANAGER.doRequest(&request);
-    return content();
+    return HtmlFormatter::Format(content);
 }
 
 int main(int argc, char** argv)
@@ -305,11 +303,12 @@ int main(int argc, char** argv)
         }
         else if(command == "submit")
         {
+            // TODO: Get answer from command line
             Printer{SubmitAnswer(std::string())}();
         }
         else if(command == "private-leaderboard")
         {
-            // TODO: Don't hardcode
+            // TODO: Get leader board from command line?
             Printer{GetPrivateLeaderBoard("192073")}();
         }
         else
