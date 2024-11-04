@@ -257,26 +257,25 @@ int main(int argc, char** argv)
         if(command == "read")
         {
             // Surely there's a more elegant way to do this
-            if(result["input-only"].count() > 0 && result["input-only"].as<bool>())
+            if(result["input-only"].count() && result["input-only"].as<bool>())
             {
                 // Don't enforce a width on input because that changes the meaning of the input.
                 // TODO: Check for the following string
                 // Puzzle inputs differ by user.  Please log in to get your puzzle input.
                 Printer{GetPuzzleInput()}();
             }
-            else if(result["sample-only"].count() > 0 && result["sample-only"].as<bool>())
+            else if(result["sample-only"].count() && result["sample-only"].as<bool>())
             {
                 Printer{GetPuzzleInputSample(), WIDTH}();
             }
-            else if(result["puzzle-only"].count() > 0 && result["puzzle-only"].as<bool>())
+            else if(result["puzzle-only"].count() && result["puzzle-only"].as<bool>())
             {
                 Printer{GetPuzzleDescription(), WIDTH}();
             }
             else
             {
-                // Don't enforce a width on input because that changes the meaning of the input.
-                Printer{GetPuzzleInput()}();
-                Printer{GetPuzzleInputSample()}();
+                GetPuzzleInput();
+                GetPuzzleInputSample();
 
                 Printer{GetPuzzleDescription(), WIDTH}();
             }
@@ -284,15 +283,15 @@ int main(int argc, char** argv)
         else if(command == "download")
         {
             // Surely there's a more elegant way to do this
-            if(result["input-only"].count() > 0 && result["input-only"].as<bool>())
+            if(result["input-only"].count() && result["input-only"].as<bool>())
             {
                 GetPuzzleInput();
             }
-            else if(result["sample-only"].count() > 0 && result["sample-only"].as<bool>())
+            else if(result["sample-only"].count() && result["sample-only"].as<bool>())
             {
                 GetPuzzleInputSample();
             }
-            else if(result["puzzle-only"].count() > 0 && result["puzzle-only"].as<bool>())
+            else if(result["puzzle-only"].count() && result["puzzle-only"].as<bool>())
             {
                 GetPuzzleDescription();
             }
@@ -305,8 +304,8 @@ int main(int argc, char** argv)
         }
         else if(command == "calendar")
         {
-            // I don't think it makes sense to allow the user to specify the width. The calendar was
-            // designed for a certain width, so deal with it.
+            // The calendar is only 6 columns wide due to the way I format it. Don't impose a width
+            // because that would make it confusing.
             Printer{GetCalendar()}();
         }
         else if(command == "submit")
