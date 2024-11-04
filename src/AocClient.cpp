@@ -9,6 +9,7 @@
 
 #include "AocHttpsRequest.hpp"
 #include "AocRequestManager.hpp"
+#include "HtmlFormatter.hpp"
 
 void AocClient::calendar()
 {
@@ -68,4 +69,43 @@ void AocClient::calendar()
 void AocClient::download() {}
 void AocClient::read() {}
 void AocClient::submit() {}
-void AocClient::privateLeaderboard() {}
+
+void AocClient::privateLeaderboard()
+{
+    AocGetRequest request;
+    request.setPage(std::format("{}/leaderboard/private/view/{}", mYear, mPrivateLeaderboardId));
+    request.setContentType("text/html");
+    request.setBeginAndEndTags(R"(<form method="post">)", "</form>");
+
+    const auto content = AocRequestManager::Instance().doRequest(&request);
+    auto html = HtmlFormatter::Format(content);
+
+    // Not an ideal solution, but it works for now.
+
+    // Remove header that gets formatted incorrectly.
+    const std::string daysHeader = "12345678910111213141516171819202122232425";
+    html.erase(html.find(daysHeader), daysHeader.size());
+
+    {
+        // Remove day status that gets formatted incorrectly.
+        const std::string stars = "*************************  ";
+        auto idx = html.find(stars);
+        while(idx != std::string::npos)
+        {
+            html.erase(idx, stars.size());
+            idx = html.find(stars);
+        }
+    }
+
+    {
+        // Remove preceding whitespace.
+        const std::string whitespace = "\n      \n";
+        if(const auto idx = html.find(whitespace); idx != std::string::npos)
+        {
+            html.erase(idx, whitespace.size());
+        }
+    }
+
+    Printer p{html};
+    p();
+}

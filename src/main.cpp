@@ -333,8 +333,10 @@ int main(int argc, char** argv)
         }
         else if(command == "private-leaderboard")
         {
+            // TODO: Validate leaderboard id.
             const auto leaderboardId = result["command_option"].as<std::string>();
-            Printer{GetPrivateLeaderBoard(leaderboardId)}();
+            client.setPrivateLeaderboardId(leaderboardId);
+            client.privateLeaderboard();
         }
         else
         {
