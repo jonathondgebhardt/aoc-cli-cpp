@@ -77,16 +77,55 @@ void AocClient::downloadPuzzleInput()
     // TODO: This should be encapsulated by the request manager.
     // const auto input =
     //     std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
-    const auto content = AocRequestManager::Instance().readOrDownload(page, &request);
-    if(mReadDownloads)
+
+    if(const auto content = AocRequestManager::Instance().readOrDownload(page, &request);
+       mReadDownloads)
     {
         mPrinter.setContent(content);
         mPrinter();
     }
 }
 
-void AocClient::downloadPuzzleDescription() {}
-void AocClient::downloadPuzzleSampleInput() {}
+void AocClient::downloadPuzzleDescription()
+{
+    HttpsRequest request;
+    const auto page = std::format("{}/day/{}", mYear, mDay);
+    request.setUrl(std::format("{}/{}", mBaseUrl, page));
+    request.setContentType("text/html");
+    request.setBeginAndEndTags(R"(<article class="day-desc">)", "</article>");
+
+    // const auto puzzle =
+    //     std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, PUZZLE_PREFIX, DAY);
+
+    if(const auto content = AocRequestManager::Instance().readOrDownload(page, &request);
+       mReadDownloads)
+    {
+        mPrinter.setContent(content);
+        mPrinter();
+    }
+}
+
+void AocClient::downloadPuzzleSampleInput()
+{
+    // FIXME: Make caching more intelligent.
+    // The sample input is contained within the puzzle description. If the description is already
+    // downloaded, I should be able to skip an HTTPS request. Should I keep the raw HTML somewhere
+    // on the filesystem? Should I care??
+    HttpsRequest request;
+    const auto page = std::format("{}/day/{}", mYear, mDay);
+    request.setUrl(std::format("{}/{}", mBaseUrl, page));
+    request.setContentType("text/html");
+    request.setBeginAndEndTags("<pre><code>", "</code></pre>");
+
+    // const auto puzzle =
+    //     std::format("{}/{}/{}/{}_sample.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
+    if(const auto content = AocRequestManager::Instance().readOrDownload(page, &request);
+       mReadDownloads)
+    {
+        mPrinter.setContent(content);
+        mPrinter();
+    }
+}
 
 void AocClient::read() {}
 

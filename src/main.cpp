@@ -44,34 +44,6 @@ namespace
 //     }
 // }
 
-std::string GetPuzzleDescription()
-{
-    AocGetRequest request;
-    request.setPage(std::format("{}/day/{}", YEAR, DAY));
-    request.setContentType("text/html");
-    request.setBeginAndEndTags(R"(<article class="day-desc">)", "</article>");
-
-    const auto puzzle =
-        std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, PUZZLE_PREFIX, DAY);
-    return AocRequestManager::Instance().readOrDownload(puzzle, &request);
-}
-
-// FIXME: Make caching more intelligent.
-// The sample input is contained within the puzzle description. If the description is already
-// downloaded, I should be able to skip an HTTPS request. Should I keep the raw HTML somewhere on
-// the filesystem? Should I care??
-std::string GetPuzzleInputSample()
-{
-    AocGetRequest request;
-    request.setPage(YEAR + "/day/" + DAY);
-    request.setContentType("text/html");
-    request.setBeginAndEndTags("<pre><code>", "</code></pre>");
-
-    const auto puzzle =
-        std::format("{}/{}/{}/{}_sample.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
-    return AocRequestManager::Instance().readOrDownload(puzzle, &request);
-}
-
 int main(int argc, char** argv)
 {
     try
@@ -165,20 +137,24 @@ int main(int argc, char** argv)
             }
             else if(result["sample-only"].count() && result["sample-only"].as<bool>())
             {
-                Printer{GetPuzzleInputSample(), WIDTH}();
+                // Printer{GetPuzzleInputSample(), WIDTH}();
+                client.downloadPuzzleSampleInput();
             }
             else if(result["puzzle-only"].count() && result["puzzle-only"].as<bool>())
             {
-                Printer{GetPuzzleDescription(), WIDTH}();
+                // Printer{GetPuzzleDescription(), WIDTH}();
+                client.downloadPuzzleDescription();
             }
             else
             {
                 // GetPuzzleInput();
                 client.downloadPuzzleInput();
 
-                GetPuzzleInputSample();
+                // GetPuzzleInputSample();
+                client.downloadPuzzleSampleInput();
 
-                Printer{GetPuzzleDescription(), WIDTH}();
+                // Printer{GetPuzzleDescription(), WIDTH}();
+                client.downloadPuzzleDescription();
             }
         }
         else if(command == "download")
@@ -192,18 +168,22 @@ int main(int argc, char** argv)
             }
             else if(result["sample-only"].count() && result["sample-only"].as<bool>())
             {
-                GetPuzzleInputSample();
+                // GetPuzzleInputSample();
+                client.downloadPuzzleSampleInput();
             }
             else if(result["puzzle-only"].count() && result["puzzle-only"].as<bool>())
             {
-                GetPuzzleDescription();
+                // GetPuzzleDescription();
+                client.downloadPuzzleDescription();
             }
             else
             {
                 // GetPuzzleInput();
                 client.downloadPuzzleInput();
-                GetPuzzleInputSample();
-                GetPuzzleDescription();
+                // GetPuzzleInputSample();
+                client.downloadPuzzleSampleInput();
+                // GetPuzzleDescription();
+                client.downloadPuzzleDescription();
             }
         }
         else if(command == "calendar")
