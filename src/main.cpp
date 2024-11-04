@@ -119,72 +119,38 @@ int main(int argc, char** argv)
         client.setDay(result["day"].as<std::string>());
         // ValidateDay();
 
-        // TODO: Add more granular control over what is printed.
-        const auto shouldRead = command == "read";
-        client.setReadDownloads(shouldRead);
-
-        if(command == "read")
+        if(command == "read" || command == "download")
         {
+            AocClient::DownloadConfig config;
+
             // TODO: Implement part support
-            // Surely there's a more elegant way to do this
             if(result["input-only"].count() && result["input-only"].as<bool>())
             {
-                // Don't enforce a width on input because that changes the meaning of the input.
-                // TODO: Check for the following string
-                // Puzzle inputs differ by user.  Please log in to get your puzzle input.
-                // Printer{GetPuzzleInput()}();
-                client.downloadPuzzleInput();
+                config.mDownloadInput = true;
+                config.mReadInput = command == "read";
             }
             else if(result["sample-only"].count() && result["sample-only"].as<bool>())
             {
-                // Printer{GetPuzzleInputSample(), WIDTH}();
-                client.downloadPuzzleSampleInput();
+                config.mDownloadSampleInput = true;
+                config.mReadSampleInput = command == "read";
             }
             else if(result["puzzle-only"].count() && result["puzzle-only"].as<bool>())
             {
-                // Printer{GetPuzzleDescription(), WIDTH}();
-                client.downloadPuzzleDescription();
+                config.mDownloadPuzzle = true;
+                config.mReadPuzzle = command == "read";
             }
             else
             {
-                // GetPuzzleInput();
-                client.downloadPuzzleInput();
+                config.mDownloadInput = true;
+                config.mDownloadPuzzle = true;
+                config.mDownloadSampleInput = true;
 
-                // GetPuzzleInputSample();
-                client.downloadPuzzleSampleInput();
+                // Only read the puzzle by default. The puzzle input is usually huge and the sample
+                // input is contained in the puzzle.
+                config.mReadPuzzle = command == "read";
+            }
 
-                // Printer{GetPuzzleDescription(), WIDTH}();
-                client.downloadPuzzleDescription();
-            }
-        }
-        else if(command == "download")
-        {
-            // TODO: Implement part support
-            // Surely there's a more elegant way to do this
-            if(result["input-only"].count() && result["input-only"].as<bool>())
-            {
-                // GetPuzzleInput();
-                client.downloadPuzzleInput();
-            }
-            else if(result["sample-only"].count() && result["sample-only"].as<bool>())
-            {
-                // GetPuzzleInputSample();
-                client.downloadPuzzleSampleInput();
-            }
-            else if(result["puzzle-only"].count() && result["puzzle-only"].as<bool>())
-            {
-                // GetPuzzleDescription();
-                client.downloadPuzzleDescription();
-            }
-            else
-            {
-                // GetPuzzleInput();
-                client.downloadPuzzleInput();
-                // GetPuzzleInputSample();
-                client.downloadPuzzleSampleInput();
-                // GetPuzzleDescription();
-                client.downloadPuzzleDescription();
-            }
+            client.download(config);
         }
         else if(command == "calendar")
         {

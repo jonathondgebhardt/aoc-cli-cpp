@@ -15,6 +15,19 @@ public:
     //! The calendar output width will not be restricted.
     void calendar();
 
+    struct DownloadConfig
+    {
+        bool mReadInput{false};
+        bool mReadPuzzle{false};
+        bool mReadSampleInput{false};
+
+        bool mDownloadInput{false};
+        bool mDownloadPuzzle{false};
+        bool mDownloadSampleInput{false};
+    };
+
+    void download(const DownloadConfig& config);
+
     void downloadPuzzleInput();
     void downloadPuzzleDescription();
     void downloadPuzzleSampleInput();

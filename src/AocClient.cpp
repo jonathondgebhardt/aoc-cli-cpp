@@ -67,6 +67,31 @@ void AocClient::calendar()
     p();
 }
 
+void AocClient::download(const DownloadConfig& config)
+{
+    const auto readDownloads = mReadDownloads;
+
+    if(config.mDownloadInput)
+    {
+        mReadDownloads = config.mReadInput;
+        downloadPuzzleInput();
+    }
+
+    if(config.mDownloadPuzzle)
+    {
+        mReadDownloads = config.mReadPuzzle;
+        downloadPuzzleDescription();
+    }
+
+    if(config.mDownloadSampleInput)
+    {
+        mReadDownloads = config.mReadSampleInput;
+        downloadPuzzleSampleInput();
+    }
+
+    mReadDownloads = readDownloads;
+}
+
 void AocClient::downloadPuzzleInput()
 {
     HttpsRequest request;
@@ -78,11 +103,15 @@ void AocClient::downloadPuzzleInput()
     // const auto input =
     //     std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
 
+    // TODO: Check for the following string
+    // Puzzle inputs differ by user.  Please log in to get your puzzle input.
+
     if(const auto content = AocRequestManager::Instance().readOrDownload(page, &request);
        mReadDownloads)
     {
-        mPrinter.setContent(content);
-        mPrinter();
+        // Don't enforce a width on input because that changes the meaning of the input.
+        Printer p{content};
+        p();
     }
 }
 
@@ -96,6 +125,8 @@ void AocClient::downloadPuzzleDescription()
 
     // const auto puzzle =
     //     std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, PUZZLE_PREFIX, DAY);
+
+    // TODO: Implement part support
 
     if(const auto content = AocRequestManager::Instance().readOrDownload(page, &request);
        mReadDownloads)
@@ -117,13 +148,16 @@ void AocClient::downloadPuzzleSampleInput()
     request.setContentType("text/html");
     request.setBeginAndEndTags("<pre><code>", "</code></pre>");
 
+    // TODO: Implement part support
+
     // const auto puzzle =
     //     std::format("{}/{}/{}/{}_sample.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
     if(const auto content = AocRequestManager::Instance().readOrDownload(page, &request);
        mReadDownloads)
     {
-        mPrinter.setContent(content);
-        mPrinter();
+        // Don't enforce a width on input because that changes the meaning of the input.
+        Printer p{content};
+        p();
     }
 }
 
