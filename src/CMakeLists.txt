@@ -22,6 +22,7 @@ set(SOURCES
     HtmlFormatter.cpp
     Throttler.cpp
     AocRequestManager.cpp
+    AocClient.cpp
 )
 
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})

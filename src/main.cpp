@@ -28,21 +28,21 @@ namespace
     std::string SESSION_FILE;
 }
 
-void ValidateYear()
-{
-    if(const auto year = std::stoi(YEAR); year < 2015 || year > std::stoi(GetCurrentYear()))
-    {
-        throw std::runtime_error(std::format("invalid year: {}", year));
-    }
-}
+// void ValidateYear()
+// {
+//     if(const auto year = std::stoi(YEAR); year < 2015 || year > std::stoi(GetCurrentYear()))
+//     {
+//         throw std::runtime_error(std::format("invalid year: {}", year));
+//     }
+// }
 
-void ValidateDay()
-{
-    if(const auto day = std::stoi(DAY); day < 0 || day > 25)
-    {
-        throw std::runtime_error(std::format("invalid day: {}", day));
-    }
-}
+// void ValidateDay()
+// {
+//     if(const auto day = std::stoi(DAY); day < 0 || day > 25)
+//     {
+//         throw std::runtime_error(std::format("invalid day: {}", day));
+//     }
+// }
 
 std::string GetPuzzleDescription()
 {
@@ -323,7 +323,7 @@ int main(int argc, char** argv)
         {
             // The calendar is only 6 columns wide due to the way I format it. Don't impose a width
             // because that would make it confusing.
-            Printer{GetCalendar()}();
+            client.calendar();
         }
         else if(command == "submit")
         {
