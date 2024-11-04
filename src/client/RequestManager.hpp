@@ -11,22 +11,22 @@
 
 //! \brief Manages making HTTPS requests to Advent of Code.
 //! Subsequent requests will be delayed in an attempt to avoid spamming Advent of COde.
-class AocRequestManager
+class RequestManager
 {
 public:
-    static AocRequestManager& Instance()
+    static RequestManager& Instance()
     {
-        static AocRequestManager manager;
+        static RequestManager manager;
         return manager;
     }
 
     // TODO: Move should be possible. Copy could be possible with reference counting to prevent
     // unnecessary global cleanup.
-    AocRequestManager(const AocRequestManager&) = delete;
-    AocRequestManager(AocRequestManager&&) noexcept = delete;
-    ~AocRequestManager() { curl_global_cleanup(); }
-    AocRequestManager& operator=(const AocRequestManager&) = delete;
-    AocRequestManager& operator=(AocRequestManager&&) noexcept = delete;
+    RequestManager(const RequestManager&) = delete;
+    RequestManager(RequestManager&&) noexcept = delete;
+    ~RequestManager() { curl_global_cleanup(); }
+    RequestManager& operator=(const RequestManager&) = delete;
+    RequestManager& operator=(RequestManager&&) noexcept = delete;
 
     // TODO: Consider doing file i/o outside of this class and just accepting the session cookie
     // instead.
@@ -49,7 +49,7 @@ public:
     HtmlContent doRequest(HttpsRequest& request);
 
 private:
-    AocRequestManager() { curl_global_init(CURL_GLOBAL_DEFAULT); }
+    RequestManager() { curl_global_init(CURL_GLOBAL_DEFAULT); }
 
     std::optional<double> getTimeToWait() const;
 

@@ -7,13 +7,13 @@
 #include <iostream>
 #include <regex>
 
-#include "AocClient.hpp"
-#include "AocRequestManager.hpp"
-#include "HtmlContent.hpp"
-#include "HtmlFormatter.hpp"
-#include "HttpsRequest.hpp"
-#include "Printer.hpp"
-#include "System.hpp"
+#include "client/Client.hpp"
+#include "client/HtmlContent.hpp"
+#include "client/HtmlFormatter.hpp"
+#include "client/HttpsRequest.hpp"
+#include "client/Printer.hpp"
+#include "client/RequestManager.hpp"
+#include "client/System.hpp"
 
 namespace
 {
@@ -108,9 +108,9 @@ int main(int argc, char** argv)
         const auto command = result["command"].as<std::string>();
 
         SESSION_FILE = result["session-file"].as<std::string>();
-        AocRequestManager::Instance().setSessionFile(SESSION_FILE);
+        RequestManager::Instance().setSessionFile(SESSION_FILE);
 
-        AocClient client;
+        Client client;
         client.setBaseUrl("https://adventofcode.com");
         client.setPrinter(Printer{result["width"].as<std::uint16_t>()});
         client.setYear(result["year"].as<std::string>());
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
 
         if(command == "read" || command == "download")
         {
-            AocClient::DownloadConfig config;
+            Client::DownloadConfig config;
 
             // TODO: Implement part support
             if(result["input-only"].count() && result["input-only"].as<bool>())

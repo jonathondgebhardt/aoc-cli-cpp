@@ -1,4 +1,4 @@
-#include "AocRequestManager.hpp"
+#include "RequestManager.hpp"
 
 #include <filesystem>
 #include <format>
@@ -94,12 +94,12 @@ namespace
 
 }
 
-void AocRequestManager::setSessionFile(const std::string& sessionFile)
+void RequestManager::setSessionFile(const std::string& sessionFile)
 {
     mSessionCookie = GetSessionCookie(sessionFile);
 }
 
-std::string AocRequestManager::readOrDownload(HttpsRequest& request)
+std::string RequestManager::readOrDownload(HttpsRequest& request)
 {
     const auto home = GetHomePath();
     if(home.empty())
@@ -129,7 +129,7 @@ std::string AocRequestManager::readOrDownload(HttpsRequest& request)
     return HtmlFormatter{content}();
 }
 
-HtmlContent AocRequestManager::doRequest(HttpsRequest& request)
+HtmlContent RequestManager::doRequest(HttpsRequest& request)
 {
     // TODO: This probably shouldn't be set by this.
     request.setCookie(mSessionCookie);
@@ -147,7 +147,7 @@ HtmlContent AocRequestManager::doRequest(HttpsRequest& request)
     return request();
 }
 
-std::optional<double> AocRequestManager::getTimeToWait() const
+std::optional<double> RequestManager::getTimeToWait() const
 {
 #ifdef WIN32
 #define stat _stat

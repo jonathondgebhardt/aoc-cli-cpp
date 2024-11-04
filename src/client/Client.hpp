@@ -8,7 +8,7 @@
 // Basically all functionality from main.cpp should be here besides argument parsing.
 // Additional members should be added to facilitate testing, such as base url.
 
-class AocClient
+class Client
 {
 public:
     //! \brief Print the calendar showing puzzle status.

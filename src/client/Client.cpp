@@ -1,4 +1,4 @@
-#include "AocClient.hpp"
+#include "Client.hpp"
 
 #include <array>
 #include <format>
@@ -7,10 +7,10 @@
 #include <regex>
 #include <sstream>
 
-#include "AocRequestManager.hpp"
 #include "HtmlFormatter.hpp"
+#include "RequestManager.hpp"
 
-void AocClient::calendar()
+void Client::calendar()
 {
     HttpsRequest request;
     request.setBaseUrl(mBaseUrl);
@@ -18,7 +18,7 @@ void AocClient::calendar()
     request.setContentType("text/html");
     request.setBeginAndEndTags(R"(<pre class="calendar">)", "</pre>");
 
-    const auto content = AocRequestManager::Instance().doRequest(request);
+    const auto content = RequestManager::Instance().doRequest(request);
     const auto& html = content.extracted();
 
     std::array<std::string, 25> dayStatus;
@@ -68,7 +68,7 @@ void AocClient::calendar()
     p();
 }
 
-void AocClient::download(const DownloadConfig& config)
+void Client::download(const DownloadConfig& config)
 {
     const auto readDownloads = mReadDownloads;
 
@@ -93,7 +93,7 @@ void AocClient::download(const DownloadConfig& config)
     mReadDownloads = readDownloads;
 }
 
-void AocClient::downloadPuzzleInput()
+void Client::downloadPuzzleInput()
 {
     HttpsRequest request;
     request.setBaseUrl(mBaseUrl);
@@ -103,7 +103,7 @@ void AocClient::downloadPuzzleInput()
     // TODO: Check for the following string
     // Puzzle inputs differ by user.  Please log in to get your puzzle input.
 
-    if(const auto content = AocRequestManager::Instance().readOrDownload(request); mReadDownloads)
+    if(const auto content = RequestManager::Instance().readOrDownload(request); mReadDownloads)
     {
         // Don't enforce a width on input because that changes the meaning of the input.
         Printer p{content};
@@ -111,7 +111,7 @@ void AocClient::downloadPuzzleInput()
     }
 }
 
-void AocClient::downloadPuzzleDescription()
+void Client::downloadPuzzleDescription()
 {
     HttpsRequest request;
     request.setBaseUrl(mBaseUrl);
@@ -121,14 +121,14 @@ void AocClient::downloadPuzzleDescription()
 
     // TODO: Implement part support
 
-    if(const auto content = AocRequestManager::Instance().readOrDownload(request); mReadDownloads)
+    if(const auto content = RequestManager::Instance().readOrDownload(request); mReadDownloads)
     {
         mPrinter.setContent(content);
         mPrinter();
     }
 }
 
-void AocClient::downloadPuzzleSampleInput()
+void Client::downloadPuzzleSampleInput()
 {
     HttpsRequest request;
     request.setBaseUrl(mBaseUrl);
@@ -138,7 +138,7 @@ void AocClient::downloadPuzzleSampleInput()
 
     // TODO: Implement part support
 
-    if(const auto content = AocRequestManager::Instance().readOrDownload(request); mReadDownloads)
+    if(const auto content = RequestManager::Instance().readOrDownload(request); mReadDownloads)
     {
         // Don't enforce a width on input because that changes the meaning of the input.
         Printer p{content};
@@ -146,7 +146,7 @@ void AocClient::downloadPuzzleSampleInput()
     }
 }
 
-void AocClient::submit()
+void Client::submit()
 {
     HttpsRequest request;
     request.setBaseUrl(mBaseUrl);
@@ -154,12 +154,12 @@ void AocClient::submit()
     request.setBeginAndEndTags("<main>", R"(</main>)");
     request.setPostContent(std::format("level={}&answer={}", mPart, mAnswer));
 
-    const auto content = AocRequestManager::Instance().doRequest(request);
+    const auto content = RequestManager::Instance().doRequest(request);
     mPrinter.setContent(HtmlFormatter::Format(content));
     mPrinter();
 }
 
-void AocClient::privateLeaderboard()
+void Client::privateLeaderboard()
 {
     HttpsRequest request;
     request.setBaseUrl(mBaseUrl);
@@ -167,7 +167,7 @@ void AocClient::privateLeaderboard()
     request.setContentType("text/html");
     request.setBeginAndEndTags(R"(<form method="post">)", "</form>");
 
-    const auto content = AocRequestManager::Instance().doRequest(request);
+    const auto content = RequestManager::Instance().doRequest(request);
     auto html = HtmlFormatter::Format(content);
 
     // Not an ideal solution, but it works for now.

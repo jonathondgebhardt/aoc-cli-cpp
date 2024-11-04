@@ -2,29 +2,9 @@ cmake_minimum_required(VERSION 3.0...3.5)
 
 project(aoc-cli)
 
-set(HEADERS
-    HttpsRequest.hpp
-    HtmlContent.hpp
-    Printer.hpp
-    HtmlFormatter.hpp
-    AocRequestManager.hpp
-    System.hpp
-    AocClient.hpp
-)
+add_subdirectory(client)
 
-set(SOURCES
-    HttpsRequest.cpp
-    main.cpp
-    HtmlContent.cpp
-    Printer.cpp
-    HtmlFormatter.cpp
-    AocRequestManager.cpp
-    AocClient.cpp
-)
+add_executable(${PROJECT_NAME} main.cpp)
 
-add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
-
-find_package(CURL CONFIG REQUIRED)
 find_package(cxxopts CONFIG REQUIRED)
-find_package(LibXml2 CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE PRIVATE CURL::libcurl cxxopts::cxxopts LibXml2::LibXml2)
+target_link_libraries(${PROJECT_NAME} PRIVATE cxxopts::cxxopts aoc-client)
