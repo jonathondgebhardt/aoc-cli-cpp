@@ -11,6 +11,7 @@ set(HEADERS
     AocRequestManager.hpp
     Throttler.hpp
     System.hpp
+    AocClient.hpp
 )
 
 set(SOURCES

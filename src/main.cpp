@@ -7,6 +7,7 @@
 #include <iostream>
 #include <regex>
 
+#include "AocClient.hpp"
 #include "AocHttpsRequest.hpp"
 #include "AocRequestManager.hpp"
 #include "HtmlContent.hpp"
@@ -204,9 +205,9 @@ int main(int argc, char** argv)
         options.parse_positional({"command", "command_option"});
 
         options.add_options()
-            ("y,year", "Puzzle year", cxxopts::value<std::string>()->default_value(GetCurrentYear()))
+            ("y,year", "Puzzle year", cxxopts::value<std::uint16_t>()->default_value(GetCurrentYear()))
         // TODO: If it's out of season, should I default the day?
-            ("d,day", "Puzzle day", cxxopts::value<std::string>()->default_value(GetCurrentDay()))
+            ("d,day", "Puzzle day", cxxopts::value<std::uint8_t>()->default_value(GetCurrentDay()))
         // TODO: Implement smart part detection? It probably shouldn't default to 1.
             ("p,part", "Puzzle part", cxxopts::value<std::string>()->default_value("1"))
             ("s,session-file", "Path to session cookie file", cxxopts::value<std::string>()->default_value(GetHomePath() + "/.adventofcode.session"))
@@ -257,12 +258,16 @@ int main(int argc, char** argv)
         SESSION_FILE = result["session-file"].as<std::string>();
         AocRequestManager::Instance().setSessionFile(SESSION_FILE);
 
-        YEAR = result["year"].as<std::string>();
-        ValidateYear();
+        // YEAR = result["year"].as<std::string>();
+        // ValidateYear();
 
         // If day is not provided, assume it's the last day completed by the user.
-        DAY = result["day"].as<std::string>();
-        ValidateDay();
+        // DAY = result["day"].as<std::string>();
+        // ValidateDay();
+
+        AocClient client;
+        client.setYear(result["year"].as<std::uint16_t>());
+        client.setDay(result["day"].as<std::uint8_t>());
 
         if(command == "read")
         {
