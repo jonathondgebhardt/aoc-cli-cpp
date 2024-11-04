@@ -175,14 +175,14 @@ std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
     return html;
 }
 
-std::string SubmitAnswer(const std::string& answer)
+std::string SubmitAnswer(const std::string& answer, const std::string& part)
 {
     AocPostRequest request;
 
     // TODO: Don't hardcode
     request.setPage(std::format("{}/day/{}/answer", YEAR, DAY));
     request.setBeginAndEndTags("<main>", R"(</main>)");
-    request.setPostContent(std::format("level={}&answer={}", 1, answer));
+    request.setPostContent(std::format("level={}&answer={}", part, answer));
 
     const auto content = AocRequestManager::Instance().doRequest(&request);
     return HtmlFormatter::Format(content);
@@ -205,14 +205,17 @@ int main(int argc, char** argv)
 
         options.add_options()
             ("y,year", "Puzzle year", cxxopts::value<std::string>()->default_value(GetCurrentYear()))
+        // TODO: If it's out of season, should I default the day?
             ("d,day", "Puzzle day", cxxopts::value<std::string>()->default_value(GetCurrentDay()))
+        // TODO: Implement smart part detection? It probably shouldn't default to 1.
+            ("p,part", "Puzzle part", cxxopts::value<std::string>()->default_value("1"))
             ("s,session-file", "Path to session cookie file", cxxopts::value<std::string>()->default_value(GetHomePath() + "/.adventofcode.session"))
-            ("i,input-only", "Download puzzle input only", cxxopts::value<bool>()->default_value("false"))
+            ("input-only", "Download puzzle input only", cxxopts::value<bool>()->default_value("false"))
             ("sample-only", "Download puzzle input sample only", cxxopts::value<bool>()->default_value("false"))
-            ("p,puzzle-only", "Download puzzle description only", cxxopts::value<bool>()->default_value("false"))
+            ("puzzle-only", "Download puzzle description only", cxxopts::value<bool>()->default_value("false"))
             ("w,width", "Width at which to wrap output", cxxopts::value<std::uint16_t>()->default_value("0"))
             ("h,help", "Print help information", cxxopts::value<bool>()->default_value("false"))
-            ("v,version", "Print version information", cxxopts::value<std::string>())
+            ("v,version", "Print version information")
             ;
 
         options.custom_help("[COMMANDS]");
@@ -256,6 +259,7 @@ int main(int argc, char** argv)
 
         if(command == "read")
         {
+            // TODO: Implement part support
             // Surely there's a more elegant way to do this
             if(result["input-only"].count() && result["input-only"].as<bool>())
             {
@@ -282,6 +286,7 @@ int main(int argc, char** argv)
         }
         else if(command == "download")
         {
+            // TODO: Implement part support
             // Surely there's a more elegant way to do this
             if(result["input-only"].count() && result["input-only"].as<bool>())
             {
@@ -311,7 +316,8 @@ int main(int argc, char** argv)
         else if(command == "submit")
         {
             const auto answer = result["command_option"].as<std::string>();
-            Printer{SubmitAnswer(answer)}();
+            const auto part = result["part"].as<std::string>();
+            Printer{SubmitAnswer(answer, part)}();
         }
         else if(command == "private-leaderboard")
         {
