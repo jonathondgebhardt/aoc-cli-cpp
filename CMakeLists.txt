@@ -25,4 +25,6 @@ if(NOT WIN32)
 	set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
 endif()
 
+set(ENABLE_BUILD_TESTS ON CACHE BOOL "Whether tests should be built")
+
 add_subdirectory(src)

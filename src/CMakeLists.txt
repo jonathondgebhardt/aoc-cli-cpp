@@ -4,6 +4,10 @@ project(aoc-cli)
 
 add_subdirectory(client)
 
+if(ENABLE_BUILD_TESTS)
+    add_subdirectory(test)
+endif()
+
 add_executable(${PROJECT_NAME} main.cpp)
 
 find_package(cxxopts CONFIG REQUIRED)

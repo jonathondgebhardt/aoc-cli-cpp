@@ -3,6 +3,7 @@
   "dependencies": [
     "curl",
     "cxxopts",
-    "libxml2"
+    "libxml2",
+    "gtest"
   ]
 }

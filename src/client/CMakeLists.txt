@@ -3,22 +3,22 @@ cmake_minimum_required(VERSION 3.0...3.5)
 project(aoc-client)
 
 set(HEADERS
-    HttpsRequest.hpp
+    Client.hpp
     HtmlContent.hpp
-    Printer.hpp
     HtmlFormatter.hpp
+    HttpsRequest.hpp
+    Printer.hpp
     RequestManager.hpp
     System.hpp
-    Client.hpp
 )
 
 set(SOURCES
-    HttpsRequest.cpp
-    HtmlContent.cpp
-    Printer.cpp
-    HtmlFormatter.cpp
-    RequestManager.cpp
     Client.cpp
+    HtmlContent.cpp
+    HtmlFormatter.cpp
+    HttpsRequest.cpp
+    Printer.cpp
+    RequestManager.cpp
 )
 
 add_library(${PROJECT_NAME} ${HEADERS} ${SOURCES})
