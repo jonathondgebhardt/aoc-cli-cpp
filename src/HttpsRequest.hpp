@@ -1,7 +1,9 @@
 #pragma once
 
-#include <curl/curl.h>
 #include <string>
+#include <utility>
+
+#include <curl/curl.h>
 
 #include "HtmlContent.hpp"
 
