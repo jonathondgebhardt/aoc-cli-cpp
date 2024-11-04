@@ -17,25 +17,31 @@ public:
     void submit();
     void privateLeaderboard();
 
+    //! \brief Set the printer to use.
+    // The printer is not used for all operations because changing the format changes the meaning
+    // (.e.g, puzzle input).
     void setPrinter(Printer printer) { mPrinter = std::move(printer); }
+
     void setSessionFile(std::string sessionFile) { mSessionFile = std::move(sessionFile); }
     void setHttpsRequestBaseUrl(std::string baseUrl) { mHttpsRequestBaseUrl = std::move(baseUrl); }
     void setPrivateLeaderboardId(std::string leaderboardId)
     {
         mPrivateLeaderboardId = std::move(leaderboardId);
     }
+    void setAnswer(std::string answer) { mAnswer = std::move(answer); }
     void setPrinterWidth(std::uint16_t printerWidth) { mPrinterWidth = printerWidth; }
-    void setYear(std::uint16_t year) { mYear = year; }
-    void setDay(std::uint8_t day) { mDay = day; }
-    void setPart(std::uint8_t part) { mPart = part; }
+    void setYear(std::string year) { mYear = std::move(year); }
+    void setDay(std::string day) { mDay = std::move(day); }
+    void setPart(std::string part) { mPart = std::move(part); }
 
 private:
     Printer mPrinter;
     std::string mSessionFile;
     std::string mHttpsRequestBaseUrl;
     std::string mPrivateLeaderboardId;
+    std::string mAnswer;
     std::uint16_t mPrinterWidth{};
-    std::uint16_t mYear{};
-    std::uint8_t mDay{};
-    std::uint8_t mPart{}; // TODO: I only need a single bit to represent this.
+    std::string mYear;
+    std::string mDay;
+    std::string mPart; // TODO: I only need a single bit to represent this.
 };

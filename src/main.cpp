@@ -205,9 +205,9 @@ int main(int argc, char** argv)
         options.parse_positional({"command", "command_option"});
 
         options.add_options()
-            ("y,year", "Puzzle year", cxxopts::value<std::uint16_t>()->default_value(GetCurrentYear()))
+            ("y,year", "Puzzle year", cxxopts::value<std::string>()->default_value(GetCurrentYear()))
         // TODO: If it's out of season, should I default the day?
-            ("d,day", "Puzzle day", cxxopts::value<std::uint8_t>()->default_value(GetCurrentDay()))
+            ("d,day", "Puzzle day", cxxopts::value<std::string>()->default_value(GetCurrentDay()))
         // TODO: Implement smart part detection? It probably shouldn't default to 1.
             ("p,part", "Puzzle part", cxxopts::value<std::string>()->default_value("1"))
             ("s,session-file", "Path to session cookie file", cxxopts::value<std::string>()->default_value(GetHomePath() + "/.adventofcode.session"))
@@ -253,7 +253,7 @@ int main(int argc, char** argv)
 
         const auto command = result["command"].as<std::string>();
 
-        WIDTH = result["width"].as<std::uint16_t>();
+        // WIDTH = result["width"].as<std::uint16_t>();
 
         SESSION_FILE = result["session-file"].as<std::string>();
         AocRequestManager::Instance().setSessionFile(SESSION_FILE);
@@ -266,8 +266,9 @@ int main(int argc, char** argv)
         // ValidateDay();
 
         AocClient client;
-        client.setYear(result["year"].as<std::uint16_t>());
-        client.setDay(result["day"].as<std::uint8_t>());
+        client.setPrinter(Printer{result["width"].as<std::uint16_t>()});
+        client.setYear(result["year"].as<std::string>());
+        client.setDay(result["day"].as<std::string>());
 
         if(command == "read")
         {
@@ -329,7 +330,9 @@ int main(int argc, char** argv)
         {
             const auto answer = result["command_option"].as<std::string>();
             const auto part = result["part"].as<std::string>();
-            Printer{SubmitAnswer(answer, part)}();
+            client.setAnswer(answer);
+            client.setPart(part);
+            client.submit();
         }
         else if(command == "private-leaderboard")
         {

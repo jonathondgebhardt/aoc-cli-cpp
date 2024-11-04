@@ -14,7 +14,7 @@
 void AocClient::calendar()
 {
     AocGetRequest request;
-    request.setPage(std::to_string(mYear)); // TODO: Year validation
+    request.setPage(mYear);
     request.setContentType("text/html");
     request.setBeginAndEndTags(R"(<pre class="calendar">)", "</pre>");
 
@@ -62,13 +62,26 @@ void AocClient::calendar()
         ++day;
     }
 
+    // The calendar is only 6 columns wide due to the way I format it. Don't impose a width because
+    // that would make it confusing.
     Printer p{ss.str()};
     p();
 }
 
 void AocClient::download() {}
 void AocClient::read() {}
-void AocClient::submit() {}
+
+void AocClient::submit()
+{
+    AocPostRequest request;
+    request.setPage(std::format("{}/day/{}/answer", mYear, mDay));
+    request.setBeginAndEndTags("<main>", R"(</main>)");
+    request.setPostContent(std::format("level={}&answer={}", mPart, mAnswer));
+
+    const auto content = AocRequestManager::Instance().doRequest(&request);
+    mPrinter.setContent(HtmlFormatter::Format(content));
+    mPrinter();
+}
 
 void AocClient::privateLeaderboard()
 {
@@ -106,6 +119,7 @@ void AocClient::privateLeaderboard()
         }
     }
 
+    // Due to the above formatting, the leaderboard is only 6 columns wide, so avoid formatting.
     Printer p{html};
     p();
 }
