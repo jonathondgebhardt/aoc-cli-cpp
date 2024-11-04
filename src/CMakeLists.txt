@@ -7,9 +7,7 @@ set(HEADERS
     HtmlContent.hpp
     Printer.hpp
     HtmlFormatter.hpp
-    AocHttpsRequest.hpp
     AocRequestManager.hpp
-    Throttler.hpp
     System.hpp
     AocClient.hpp
 )
@@ -20,7 +18,6 @@ set(SOURCES
     HtmlContent.cpp
     Printer.cpp
     HtmlFormatter.cpp
-    Throttler.cpp
     AocRequestManager.cpp
     AocClient.cpp
 )

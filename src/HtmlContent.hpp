@@ -12,7 +12,11 @@ public:
 
     //! \brief Retrieves all content between begin and end tags. If begin and end are empty, same
     //! behavior as constructor taking only content.
-    HtmlContent(const std::string& content, const std::string& begin, const std::string& end);
+    HtmlContent(std::string content, std::string begin, std::string end)
+        : mContent(std::move(content)), mBegin(std::move(begin)), mEnd(std::move(end))
+    {
+        extract();
+    }
 
     HtmlContent() = default;
     HtmlContent(const HtmlContent&) = default;
@@ -23,13 +27,19 @@ public:
 
     void setContent(std::string content) { mContent = std::move(content); }
 
-    //! \brief Yields extracted content.
-    std::string operator()() const { return mContent; }
+    std::string extract();
+    HtmlContent extract(const std::string& begin, const std::string& end)
+    {
+        return HtmlContent{extract(), begin, end};
+    }
 
-    //! \brief Further extracts content between begin and end.
-    HtmlContent operator()(const std::string& begin, const std::string& end) const;
+    std::string plain() const { return mContent; }
+    std::string extracted() const { return mExtractedContent; }
 
 private:
     // TODO: Use std::string_view?
     std::string mContent;
+    std::string mExtractedContent;
+    std::string mBegin;
+    std::string mEnd;
 };

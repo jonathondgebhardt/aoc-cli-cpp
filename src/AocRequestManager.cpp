@@ -5,12 +5,17 @@
 #include <fstream>
 #include <iostream>
 #include <print>
+#include <sys/stat.h>
+#include <thread>
+
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 #include <curl/curl.h>
 
 #include "HtmlFormatter.hpp"
 #include "System.hpp"
-#include "Throttler.hpp"
 
 namespace
 {
@@ -57,6 +62,36 @@ namespace
 
         return false;
     }
+
+    //! Updates the time last modified on the file.
+    //! \param file The file.
+    void TouchFile(const std::string& file)
+    {
+        if(std::filesystem::exists(file))
+        {
+            std::filesystem::remove(file);
+        }
+
+        std::filesystem::path p{file};
+        if(const auto parent = p.parent_path(); !std::filesystem::exists(parent))
+        {
+            // TODO: Should this be responsible for this?
+            if(!std::filesystem::create_directories(parent))
+            {
+                throw std::runtime_error(
+                    std::format("could not create working directory '{}'", parent.string()));
+            }
+        }
+
+        std::ofstream ofs;
+        ofs.open(file);
+
+        if(!ofs.good())
+        {
+            throw std::runtime_error(std::format("could not touch book-keeping file '{}'", file));
+        }
+    }
+
 }
 
 void AocRequestManager::setSessionFile(const std::string& sessionFile)
@@ -64,38 +99,76 @@ void AocRequestManager::setSessionFile(const std::string& sessionFile)
     mSessionCookie = GetSessionCookie(sessionFile);
 }
 
-std::string AocRequestManager::readOrDownload(const std::string& file, HttpsRequest* request)
+std::string AocRequestManager::readOrDownload(HttpsRequest& request)
 {
+    const auto home = GetHomePath();
+    if(home.empty())
+    {
+        throw std::runtime_error("could not get home path");
+    }
+
+    const auto& file = std::format("{}/{}/{}.html", home, mDownloadPrefix, request.getPage());
     if(std::filesystem::exists(file))
     {
         std::println("File '{}' found on system", file);
-        return ReadFileIntoString(file);
+
+        const HtmlContent html{ReadFileIntoString(file), request.getBeginTag(),
+                               request.getEndTag()};
+        return HtmlFormatter{html}();
     }
 
     std::println("File '{}' not found on system, downloading...", file);
-
     const auto content = doRequest(request);
 
-    HtmlFormatter plain{content};
+    CreateIfDoesNotExist(std::filesystem::path{file}.parent_path());
 
-    if(const auto home = GetHomePath(); !home.empty())
-    {
-        CreateIfDoesNotExist(std::filesystem::path{file}.parent_path());
+    std::println("Downloaded '{}'", file);
+    std::ofstream ofs{file};
+    ofs << content.plain() << "\n";
 
-        std::println("Downloaded '{}'", file);
-        std::ofstream ofs{file};
-        ofs << plain() << "\n";
-    }
-
-    return plain();
+    return HtmlFormatter{content}();
 }
 
-HtmlContent AocRequestManager::doRequest(HttpsRequest* request)
+HtmlContent AocRequestManager::doRequest(HttpsRequest& request)
 {
     // TODO: This probably shouldn't be set by this.
-    request->setCookie(mSessionCookie);
+    request.setCookie(mSessionCookie);
 
-    Throttler t{request, mWaitTime,
-                std::format("{}/{}/.lastgetrequest", GetHomePath(), mDownloadPrefix)};
-    return t.handleRequest();
+    if(const auto waitTime = getTimeToWait(); waitTime.has_value() && waitTime.value() > 0.0)
+    {
+        std::println("In an effort to prevent overloading AoC servers, waiting to perform HTTPS "
+                     "request ({} seconds)",
+                     waitTime.value());
+        std::this_thread::sleep_for(std::chrono::seconds(static_cast<long>(waitTime.value())));
+    }
+
+    TouchFile(mBookkeepingFile);
+
+    return request();
+}
+
+std::optional<double> AocRequestManager::getTimeToWait() const
+{
+#ifdef WIN32
+#define stat _stat
+#endif
+
+    if(!std::filesystem::exists(mBookkeepingFile))
+    {
+        return std::nullopt;
+    }
+
+    struct stat fileStat;
+    if(const auto res = stat(mBookkeepingFile.c_str(), &fileStat); res != 0)
+    {
+        throw std::runtime_error(
+            std::format("could not stat file '{}': {}", mBookkeepingFile, res));
+    }
+
+    auto mod_time = fileStat.st_mtime;
+
+    std::time_t t = std::time(nullptr);
+    std::localtime(&t);
+
+    return mWaitTime - difftime(t, mod_time);
 }

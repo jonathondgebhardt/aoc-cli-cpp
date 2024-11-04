@@ -8,7 +8,7 @@
 class HtmlFormatter
 {
 public:
-    explicit HtmlFormatter(const HtmlContent& content) : HtmlFormatter(content()) {}
+    explicit HtmlFormatter(const HtmlContent& content) : HtmlFormatter(content.extracted()) {}
     explicit HtmlFormatter(const std::string& html) { extractContent(html); }
 
     HtmlFormatter() = default;
@@ -18,7 +18,7 @@ public:
     HtmlFormatter& operator=(const HtmlFormatter&) = default;
     HtmlFormatter& operator=(HtmlFormatter&&) noexcept = default;
 
-    void setHtml(const HtmlContent& html) { extractContent(html()); }
+    void setHtml(const HtmlContent& html) { extractContent(html.extracted()); }
     void setHtml(const std::string& html) { extractContent(html); }
 
     //! \brief Yields formatted plain text.

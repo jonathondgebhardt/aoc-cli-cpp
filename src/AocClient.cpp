@@ -13,12 +13,13 @@
 void AocClient::calendar()
 {
     HttpsRequest request;
-    request.setUrl(std::format("{}/{}", mBaseUrl, mYear));
+    request.setBaseUrl(mBaseUrl);
+    request.setPage(mYear);
     request.setContentType("text/html");
     request.setBeginAndEndTags(R"(<pre class="calendar">)", "</pre>");
 
-    const auto content = AocRequestManager::Instance().doRequest(&request);
-    const auto html = content();
+    const auto content = AocRequestManager::Instance().doRequest(request);
+    const auto& html = content.extracted();
 
     std::array<std::string, 25> dayStatus;
     std::regex days{"class=\"calendar-day(\\d{1,2})(\\s?.*?)\">"};
@@ -95,19 +96,14 @@ void AocClient::download(const DownloadConfig& config)
 void AocClient::downloadPuzzleInput()
 {
     HttpsRequest request;
-    const auto page = std::format("{}/day/{}/input", mYear, mDay);
-    request.setUrl(std::format("{}/{}", mBaseUrl, page));
+    request.setBaseUrl(mBaseUrl);
+    request.setPage(std::format("{}/day/{}/input", mYear, mDay));
     request.setContentType("text/plain");
-
-    // TODO: This should be encapsulated by the request manager.
-    // const auto input =
-    //     std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
 
     // TODO: Check for the following string
     // Puzzle inputs differ by user.  Please log in to get your puzzle input.
 
-    if(const auto content = AocRequestManager::Instance().readOrDownload(page, &request);
-       mReadDownloads)
+    if(const auto content = AocRequestManager::Instance().readOrDownload(request); mReadDownloads)
     {
         // Don't enforce a width on input because that changes the meaning of the input.
         Printer p{content};
@@ -118,18 +114,14 @@ void AocClient::downloadPuzzleInput()
 void AocClient::downloadPuzzleDescription()
 {
     HttpsRequest request;
-    const auto page = std::format("{}/day/{}", mYear, mDay);
-    request.setUrl(std::format("{}/{}", mBaseUrl, page));
+    request.setBaseUrl(mBaseUrl);
+    request.setPage(std::format("{}/day/{}", mYear, mDay));
     request.setContentType("text/html");
     request.setBeginAndEndTags(R"(<article class="day-desc">)", "</article>");
 
-    // const auto puzzle =
-    //     std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, PUZZLE_PREFIX, DAY);
-
     // TODO: Implement part support
 
-    if(const auto content = AocRequestManager::Instance().readOrDownload(page, &request);
-       mReadDownloads)
+    if(const auto content = AocRequestManager::Instance().readOrDownload(request); mReadDownloads)
     {
         mPrinter.setContent(content);
         mPrinter();
@@ -138,22 +130,15 @@ void AocClient::downloadPuzzleDescription()
 
 void AocClient::downloadPuzzleSampleInput()
 {
-    // FIXME: Make caching more intelligent.
-    // The sample input is contained within the puzzle description. If the description is already
-    // downloaded, I should be able to skip an HTTPS request. Should I keep the raw HTML somewhere
-    // on the filesystem? Should I care??
     HttpsRequest request;
-    const auto page = std::format("{}/day/{}", mYear, mDay);
-    request.setUrl(std::format("{}/{}", mBaseUrl, page));
+    request.setBaseUrl(mBaseUrl);
+    request.setPage(std::format("{}/day/{}", mYear, mDay));
     request.setContentType("text/html");
     request.setBeginAndEndTags("<pre><code>", "</code></pre>");
 
     // TODO: Implement part support
 
-    // const auto puzzle =
-    //     std::format("{}/{}/{}/{}_sample.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
-    if(const auto content = AocRequestManager::Instance().readOrDownload(page, &request);
-       mReadDownloads)
+    if(const auto content = AocRequestManager::Instance().readOrDownload(request); mReadDownloads)
     {
         // Don't enforce a width on input because that changes the meaning of the input.
         Printer p{content};
@@ -161,16 +146,15 @@ void AocClient::downloadPuzzleSampleInput()
     }
 }
 
-void AocClient::read() {}
-
 void AocClient::submit()
 {
     HttpsRequest request;
-    request.setUrl(std::format("{}/{}/day/{}/answer", mBaseUrl, mYear, mDay));
+    request.setBaseUrl(mBaseUrl);
+    request.setPage(std::format("{}/day/{}/answer", mYear, mDay));
     request.setBeginAndEndTags("<main>", R"(</main>)");
     request.setPostContent(std::format("level={}&answer={}", mPart, mAnswer));
 
-    const auto content = AocRequestManager::Instance().doRequest(&request);
+    const auto content = AocRequestManager::Instance().doRequest(request);
     mPrinter.setContent(HtmlFormatter::Format(content));
     mPrinter();
 }
@@ -178,12 +162,12 @@ void AocClient::submit()
 void AocClient::privateLeaderboard()
 {
     HttpsRequest request;
-    request.setUrl(
-        std::format("{}/{}/leaderboard/private/view/{}", mBaseUrl, mYear, mPrivateLeaderboardId));
+    request.setBaseUrl(mBaseUrl);
+    request.setPage(std::format("{}/leaderboard/private/view/{}", mYear, mPrivateLeaderboardId));
     request.setContentType("text/html");
     request.setBeginAndEndTags(R"(<form method="post">)", "</form>");
 
-    const auto content = AocRequestManager::Instance().doRequest(&request);
+    const auto content = AocRequestManager::Instance().doRequest(request);
     auto html = HtmlFormatter::Format(content);
 
     // Not an ideal solution, but it works for now.

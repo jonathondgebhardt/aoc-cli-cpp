@@ -34,12 +34,77 @@ HttpsRequest::HttpsRequest()
     curl_easy_setopt(mCurl, CURLOPT_WRITEDATA, &mReadBuffer);
 }
 
+HttpsRequest::HttpsRequest(const HttpsRequest& other)
+{
+    mCurl = curl_easy_duphandle(other.mCurl);
+    mBaseUrl = other.mBaseUrl;
+    mPage = other.mPage;
+    mReadBuffer = other.mReadBuffer;
+    mSessionFilePath = other.mSessionFilePath;
+    mBegin = other.mBegin;
+    mEnd = other.mEnd;
+    mRequestHandled = other.mRequestHandled;
+}
+
+HttpsRequest::HttpsRequest(HttpsRequest&& other) noexcept
+{
+    mCurl = std::exchange(other.mCurl, nullptr);
+    mBaseUrl = std::exchange(other.mBaseUrl, std::string());
+    mPage = std::exchange(other.mPage, std::string());
+    mReadBuffer = std::exchange(other.mReadBuffer, std::string());
+    mSessionFilePath = std::exchange(other.mSessionFilePath, std::string());
+    mBegin = std::exchange(other.mBegin, std::string());
+    mEnd = std::exchange(other.mEnd, std::string());
+    mRequestHandled = other.mRequestHandled;
+}
+
 HttpsRequest::~HttpsRequest() noexcept
 {
     if(mCurl)
     {
         curl_easy_cleanup(mCurl);
     }
+}
+
+HttpsRequest& HttpsRequest::operator=(const HttpsRequest& other)
+{
+    if(mCurl)
+    {
+        curl_easy_cleanup(mCurl);
+    }
+
+    mCurl = curl_easy_duphandle(other.mCurl);
+    mBaseUrl = other.mBaseUrl;
+    mPage = other.mPage;
+    mReadBuffer = other.mReadBuffer;
+    mSessionFilePath = other.mSessionFilePath;
+    mBegin = other.mBegin;
+    mEnd = other.mEnd;
+    mRequestHandled = other.mRequestHandled;
+
+    return *this;
+}
+
+HttpsRequest& HttpsRequest::operator=(HttpsRequest&& other) noexcept
+{
+    if(this != &other)
+    {
+        if(mCurl)
+        {
+            curl_easy_cleanup(mCurl);
+        }
+
+        mCurl = std::exchange(other.mCurl, nullptr);
+        mBaseUrl = std::exchange(other.mBaseUrl, std::string());
+        mPage = std::exchange(other.mPage, std::string());
+        mReadBuffer = std::exchange(other.mReadBuffer, std::string());
+        mSessionFilePath = std::exchange(other.mSessionFilePath, std::string());
+        mBegin = std::exchange(other.mBegin, std::string());
+        mEnd = std::exchange(other.mEnd, std::string());
+        mRequestHandled = other.mRequestHandled;
+    }
+
+    return *this;
 }
 
 void HttpsRequest::setUrl(const std::string& url) const { setUrl(url.c_str()); }
@@ -61,12 +126,6 @@ void HttpsRequest::setCookie(const std::string& cookie) const
     curl_easy_setopt(mCurl, CURLOPT_COOKIE, cookie.c_str());
 }
 
-void HttpsRequest::setBeginAndEndTags(const std::string& begin, const std::string& end)
-{
-    mBegin = begin;
-    mEnd = end;
-}
-
 void HttpsRequest::setPostContent(const std::string& content)
 {
     // Copy the post content to guarantee no lifetime issues. CURLOPT_POSTFIELDS does not copy
@@ -84,6 +143,8 @@ HtmlContent HttpsRequest::operator()()
     {
         return HtmlContent{mReadBuffer};
     }
+
+    setUrl(std::format("{}/{}", mBaseUrl, mPage));
 
     if(auto res = curl_easy_perform(mCurl); res == CURLE_OK)
     {

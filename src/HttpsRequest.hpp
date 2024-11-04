@@ -12,41 +12,21 @@ class HttpsRequest
 {
 public:
     HttpsRequest();
-    HttpsRequest(const HttpsRequest&) = delete;
-
-    HttpsRequest(HttpsRequest&& other) noexcept
-    {
-        mCurl = std::exchange(other.mCurl, nullptr);
-        mReadBuffer = std::exchange(other.mReadBuffer, std::string());
-        mSessionFilePath = std::exchange(other.mSessionFilePath, std::string());
-        mBegin = std::exchange(other.mBegin, std::string());
-        mEnd = std::exchange(other.mEnd, std::string());
-        mRequestHandled = other.mRequestHandled;
-    }
-
+    HttpsRequest(const HttpsRequest& other);
+    HttpsRequest(HttpsRequest&& other) noexcept;
     virtual ~HttpsRequest() noexcept;
-    HttpsRequest& operator=(const HttpsRequest&) = delete;
-
-    HttpsRequest& operator=(HttpsRequest&& other) noexcept
-    {
-        if(mCurl)
-        {
-            curl_easy_cleanup(mCurl);
-        }
-
-        mCurl = std::exchange(other.mCurl, nullptr);
-        mReadBuffer = std::exchange(other.mReadBuffer, std::string());
-        mSessionFilePath = std::exchange(other.mSessionFilePath, std::string());
-        mBegin = std::exchange(other.mBegin, std::string());
-        mEnd = std::exchange(other.mEnd, std::string());
-        mRequestHandled = other.mRequestHandled;
-
-        return *this;
-    }
+    HttpsRequest& operator=(const HttpsRequest& other);
+    HttpsRequest& operator=(HttpsRequest&& other) noexcept;
 
     //! \brief Set the base URL.
     void setUrl(const std::string& url) const;
     void setUrl(const char* url) const;
+
+    void setBaseUrl(std::string baseUrl) { mBaseUrl = std::move(baseUrl); }
+    std::string getBaseUrl() const { return mBaseUrl; }
+
+    void setPage(std::string page) { mPage = std::move(page); }
+    std::string getPage() const { return mPage; }
 
     //! \brief Set the content type (e.g. text/html)
     void setContentType(const std::string& type) const;
@@ -55,9 +35,19 @@ public:
     //! \brief Set the cookie.
     void setCookie(const std::string& cookie) const;
 
+    void setBeginTag(std::string begin) { mBegin = std::move(begin); }
+    void setEndTag(std::string end) { mEnd = std::move(end); }
+
     //! \brief Set the beginning and end tags.
     //! These tags will be given to HtmlContent.
-    void setBeginAndEndTags(const std::string& begin, const std::string& end);
+    void setBeginAndEndTags(const std::string& begin, const std::string& end)
+    {
+        setBeginTag(begin);
+        setEndTag(end);
+    }
+
+    std::string getBeginTag() const { return mBegin; }
+    std::string getEndTag() const { return mEnd; }
 
     //! \brief Set content to post and enables post mode.
     void setPostContent(const std::string& content);
@@ -76,6 +66,8 @@ protected:
     CURL* mCurl = nullptr;
 
 private:
+    std::string mBaseUrl;
+    std::string mPage;
     std::string mReadBuffer;
     std::string mSessionFilePath;
     std::string mBegin;

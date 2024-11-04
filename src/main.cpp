@@ -8,7 +8,6 @@
 #include <regex>
 
 #include "AocClient.hpp"
-#include "AocHttpsRequest.hpp"
 #include "AocRequestManager.hpp"
 #include "HtmlContent.hpp"
 #include "HtmlFormatter.hpp"

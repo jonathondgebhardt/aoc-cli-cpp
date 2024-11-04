@@ -32,8 +32,6 @@ public:
     void downloadPuzzleDescription();
     void downloadPuzzleSampleInput();
 
-    void read();
-
     //! \brief Submit the answer and print the response.
     //! Year, day, part, and answer must be set.
     void submit();
