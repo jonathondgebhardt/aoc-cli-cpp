@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <string>
 
 #include "HttpsRequest.hpp"
@@ -18,7 +17,7 @@ public:
 
     // TODO: Consider removing this. Requests should always be delayed.
     //! \brief Set the time to wait between HTTPS requests.
-    void setWaitTime(double waitTime) { mWaitTime = waitTime; }
+    void setWaitTime(const double waitTime) { mWaitTime = waitTime; }
 
     //! \brief Set the download prefix to save book-keeping files.
     void setDownloadPrefix(const std::string& downloadPrefix) { mDownloadPrefix = downloadPrefix; }

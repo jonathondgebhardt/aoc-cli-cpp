@@ -2,12 +2,9 @@
 
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <print>
-#include <thread>
-
 #include <sys/stat.h>
-#include <sys/types.h>
+#include <thread>
 
 #ifndef WIN32
 #include <unistd.h>

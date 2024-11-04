@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <stdexcept>
 
 #include "HttpsRequest.hpp"
@@ -12,8 +13,8 @@ public:
     //! \param request The request to make.
     //! \param time The amount of time to wait between requests.
     //! \param file The path to write the timestamp file to.
-    Throttler(HttpsRequest* request, double time, const std::string& file)
-        : mRequest(request), mWaitTime(time), mFile(file)
+    Throttler(HttpsRequest* request, const double time, std::string file)
+        : mRequest(request), mFile(std::move(file)), mWaitTime(time)
     {
         if(!request)
         {
@@ -24,12 +25,12 @@ public:
     ~Throttler() noexcept = default;
 
     //! \brief If necessary, waits the amount of time, then makes the request.
-    HtmlContent handleRequest() const;
+    [[nodiscard]] HtmlContent handleRequest() const;
 
 private:
     //! Gets the time the last HTTPS request was made.
     //! \return The elapsed time since the last HTTPS request or nullopt if there's no time to wait.
-    std::optional<double> getTimeToWait() const;
+    [[nodiscard]] std::optional<double> getTimeToWait() const;
 
     HttpsRequest* mRequest{nullptr};
     std::string mFile;

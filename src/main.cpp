@@ -1,10 +1,10 @@
+#include <array>
 #include <cstdlib>
 #include <cxxopts.hpp>
 #include <filesystem>
 #include <format>
 #include <fstream>
 #include <iostream>
-#include <print>
 #include <regex>
 
 #include "AocHttpsRequest.hpp"
@@ -23,7 +23,7 @@ namespace
     const char* INPUT_PREFIX = "input";
     const char* PUZZLE_PREFIX = "puzzle";
 
-    size_t WIDTH = 0;
+    std::uint16_t WIDTH = 0;
     std::string YEAR; // TODO: Allow this to be defined with a preprocessor directive?
     std::string DAY;
     std::string SESSION_FILE;
@@ -99,7 +99,7 @@ std::string GetCalendar()
     for(auto i = std::sregex_iterator(html.begin(), html.end(), days), end = std::sregex_iterator();
         i != end; ++i)
     {
-        const auto match = *i;
+        const auto& match = *i;
         if(match.size() < 2)
         {
             throw std::runtime_error(std::format("unexpected regex result: {}", match.str()));
@@ -154,20 +154,24 @@ std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
     const std::string daysHeader = "12345678910111213141516171819202122232425";
     html.erase(html.find(daysHeader), daysHeader.size());
 
-    // Remove day status that gets formatted incorrectly.
-    const std::string stars = "*************************  ";
-    auto idx = html.find(stars);
-    while(idx != std::string::npos)
     {
-        html.erase(idx, stars.size());
-        idx = html.find(stars);
+        // Remove day status that gets formatted incorrectly.
+        const std::string stars = "*************************  ";
+        auto idx = html.find(stars);
+        while(idx != std::string::npos)
+        {
+            html.erase(idx, stars.size());
+            idx = html.find(stars);
+        }
     }
 
-    // Remove preceding whitespace.
-    const std::string whitespace = "\n      \n";
-    if(const auto idx = html.find(whitespace); idx != std::string::npos)
     {
-        html.erase(idx, whitespace.size());
+        // Remove preceding whitespace.
+        const std::string whitespace = "\n      \n";
+        if(const auto idx = html.find(whitespace); idx != std::string::npos)
+        {
+            html.erase(idx, whitespace.size());
+        }
     }
 
     return html;
@@ -208,7 +212,7 @@ int main(int argc, char** argv)
             ("i,input-only", "Download puzzle input only", cxxopts::value<bool>()->default_value("false"))
             ("sample-only", "Download puzzle input sample only", cxxopts::value<bool>()->default_value("false"))
             ("p,puzzle-only", "Download puzzle description only", cxxopts::value<bool>()->default_value("false"))
-            ("w,width", "Width at which to wrap output", cxxopts::value<size_t>()->default_value("0"))
+            ("w,width", "Width at which to wrap output", cxxopts::value<std::uint16_t>()->default_value("0"))
             ("h,help", "Print help information", cxxopts::value<bool>()->default_value("false"))
             ("v,version", "Print version information", cxxopts::value<std::string>())
             ;
@@ -240,7 +244,7 @@ int main(int argc, char** argv)
 
         const auto command = result["command"].as<std::string>();
 
-        WIDTH = result["width"].as<size_t>();
+        WIDTH = result["width"].as<std::uint16_t>();
 
         SESSION_FILE = result["session-file"].as<std::string>();
         REQUEST_MANAGER.setSessionFile(SESSION_FILE);

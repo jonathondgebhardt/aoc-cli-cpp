@@ -1,7 +1,6 @@
 #pragma once
 
 #include <sstream>
-#include <vector>
 
 #include "HtmlContent.hpp"
 
@@ -13,11 +12,11 @@ public:
     explicit HtmlFormatter(const HtmlContent& content);
 
     //! \brief Yields formatted plain text.
-    std::string operator()() { return mStream.str(); }
+    std::string operator()() const { return mStream.str(); }
 
     static std::string Format(const HtmlContent& content)
     {
-        HtmlFormatter formatter{content};
+        const HtmlFormatter formatter{content};
         return formatter();
     }
 

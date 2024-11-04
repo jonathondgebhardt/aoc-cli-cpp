@@ -1,7 +1,6 @@
 #pragma once
 
 #include <curl/curl.h>
-#include <optional>
 #include <string>
 
 #include "HtmlContent.hpp"
@@ -11,23 +10,50 @@ class HttpsRequest
 {
 public:
     HttpsRequest();
-    virtual ~HttpsRequest() noexcept;
+    HttpsRequest(const HttpsRequest&) = delete;
 
-    HttpsRequest(const HttpsRequest&) = default;
+    HttpsRequest(HttpsRequest&& other) noexcept
+    {
+        mCurl = std::exchange(other.mCurl, nullptr);
+        mReadBuffer = std::exchange(other.mReadBuffer, std::string());
+        mSessionFilePath = std::exchange(other.mSessionFilePath, std::string());
+        mBegin = std::exchange(other.mBegin, std::string());
+        mEnd = std::exchange(other.mEnd, std::string());
+        mGetRequested = other.mGetRequested;
+    }
+
+    virtual ~HttpsRequest() noexcept;
     HttpsRequest& operator=(const HttpsRequest&) = delete;
+
+    HttpsRequest& operator=(HttpsRequest&& other) noexcept
+    {
+        if(mCurl)
+        {
+            curl_easy_cleanup(mCurl);
+        }
+
+        mCurl = std::exchange(other.mCurl, nullptr);
+        mReadBuffer = std::exchange(other.mReadBuffer, std::string());
+        mSessionFilePath = std::exchange(other.mSessionFilePath, std::string());
+        mBegin = std::exchange(other.mBegin, std::string());
+        mEnd = std::exchange(other.mEnd, std::string());
+        mGetRequested = other.mGetRequested;
+
+        return *this;
+    }
 
     //! \brief Set the base URL.
     void setUrl(const std::string& url) const;
     void setUrl(const char* url) const;
 
-    //! \brief Set the content type (eg text/html)
+    //! \brief Set the content type (e.g. text/html)
     void setContentType(const std::string& type) const;
     void setContentType(const char* type) const;
 
     //! \brief Set the cookie.
     void setCookie(const std::string& cookie) const;
 
-    //! \brief Set the begin and end tags.
+    //! \brief Set the beginning and end tags.
     //! These tags will be given to HtmlContent.
     void setBeginAndEndTags(const std::string& begin, const std::string& end);
 

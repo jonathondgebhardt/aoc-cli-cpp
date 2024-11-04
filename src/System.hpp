@@ -1,21 +1,25 @@
 #pragma once
 
 #include <ctime>
-#include <iostream>
 #include <string>
 
-static inline std::string GetHomePath()
+static std::string GetHomePath()
 {
 #ifdef WIN32
     //  TODO: Test this
+    // FIXME: Resharper complains this is deprecated.
     if(const auto homeDrive = std::getenv("HOMEDRIVE"))
     {
+        // FIXME: Resharper complains this is deprecated.
         if(const auto homePath = std::getenv("HOMEPATH"))
         {
             // Surely there's a more elegant way to do this.
             return std::string(homeDrive) + "/" + std::string(homePath);
         }
     }
+
+    return {};
+
 #else
     return std::getenv("HOME");
 #endif
@@ -23,11 +27,13 @@ static inline std::string GetHomePath()
 
 // If year is not provided, assume it's this year or the previous year's AoC if it's not yet
 // December.
-static inline std::string GetCurrentYear()
+static std::string GetCurrentYear()
 {
     // https://stackoverflow.com/a/58153628
-    std::time_t t = std::time(nullptr);
-    std::tm* const pTInfo = std::localtime(&t);
+    const std::time_t t = std::time(nullptr);
+
+    // FIXME: Resharper complains this is deprecated.
+    const std::tm* const pTInfo = std::localtime(&t);
 
     auto currentYear = 1900 + pTInfo->tm_year;
 
@@ -42,10 +48,10 @@ static inline std::string GetCurrentYear()
 
 // FIXME: This should be getting the last unlocked day. Not sure if I wanna make an HTTPS request
 // just for that though.
-static inline std::string GetCurrentDay()
+static std::string GetCurrentDay()
 {
     // https://stackoverflow.com/a/58153628
-    std::time_t t = std::time(nullptr);
-    std::tm* const pTInfo = std::localtime(&t);
+    const std::time_t t = std::time(nullptr);
+    const std::tm* const pTInfo = std::localtime(&t);
     return {std::to_string(pTInfo->tm_mday)};
 }
