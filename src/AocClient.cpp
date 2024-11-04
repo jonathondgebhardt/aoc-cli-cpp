@@ -67,7 +67,27 @@ void AocClient::calendar()
     p();
 }
 
-void AocClient::download() {}
+void AocClient::downloadPuzzleInput()
+{
+    HttpsRequest request;
+    const auto page = std::format("{}/day/{}/input", mYear, mDay);
+    request.setUrl(std::format("{}/{}", mBaseUrl, page));
+    request.setContentType("text/plain");
+
+    // TODO: This should be encapsulated by the request manager.
+    // const auto input =
+    //     std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
+    const auto content = AocRequestManager::Instance().readOrDownload(page, &request);
+    if(mReadDownloads)
+    {
+        mPrinter.setContent(content);
+        mPrinter();
+    }
+}
+
+void AocClient::downloadPuzzleDescription() {}
+void AocClient::downloadPuzzleSampleInput() {}
+
 void AocClient::read() {}
 
 void AocClient::submit()

@@ -14,7 +14,11 @@ public:
     //! \brief Print the calendar showing puzzle status.
     //! The calendar output width will not be restricted.
     void calendar();
-    void download();
+
+    void downloadPuzzleInput();
+    void downloadPuzzleDescription();
+    void downloadPuzzleSampleInput();
+
     void read();
 
     //! \brief Submit the answer and print the response.
@@ -43,6 +47,7 @@ public:
     void setYear(std::string year) { mYear = std::move(year); }
     void setDay(std::string day) { mDay = std::move(day); }
     void setPart(std::string part) { mPart = std::move(part); }
+    void setReadDownloads(const bool readDownloads) { mReadDownloads = readDownloads; }
 
 private:
     Printer mPrinter;
@@ -55,4 +60,5 @@ private:
     std::string mYear;
     std::string mDay;
     std::string mPart; // TODO: I only need a single bit to represent this.
+    bool mReadDownloads{false};
 };

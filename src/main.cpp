@@ -56,17 +56,6 @@ std::string GetPuzzleDescription()
     return AocRequestManager::Instance().readOrDownload(puzzle, &request);
 }
 
-std::string GetPuzzleInput()
-{
-    AocGetRequest request;
-    request.setPage(std::format("{}/day/{}/input", YEAR, DAY));
-    request.setContentType("text/plain");
-
-    const auto input =
-        std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
-    return AocRequestManager::Instance().readOrDownload(input, &request);
-}
-
 // FIXME: Make caching more intelligent.
 // The sample input is contained within the puzzle description. If the description is already
 // downloaded, I should be able to skip an HTTPS request. Should I keep the raw HTML somewhere on
@@ -81,112 +70,6 @@ std::string GetPuzzleInputSample()
     const auto puzzle =
         std::format("{}/{}/{}/{}_sample.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
     return AocRequestManager::Instance().readOrDownload(puzzle, &request);
-}
-
-std::string GetCalendar()
-{
-    AocGetRequest request;
-    request.setPage(YEAR);
-    request.setContentType("text/html");
-    request.setBeginAndEndTags(R"(<pre class="calendar">)", "</pre>");
-
-    const auto content = AocRequestManager::Instance().doRequest(&request);
-    const auto html = content();
-
-    std::array<std::string, 25> dayStatus;
-    std::regex days{"class=\"calendar-day(\\d{1,2})(\\s?.*?)\">"};
-    for(auto i = std::sregex_iterator(html.begin(), html.end(), days), end = std::sregex_iterator();
-        i != end; ++i)
-    {
-        const auto& match = *i;
-        if(match.size() < 2)
-        {
-            throw std::runtime_error(std::format("unexpected regex result: {}", match.str()));
-        }
-
-        const auto dayNumber = static_cast<std::size_t>(std::stoi(match[1].str())) - 1;
-        if(dayNumber > 25)
-        {
-            throw std::runtime_error(std::format("unexpected day number: {}", dayNumber));
-        }
-
-        const auto stars = [&]() -> std::string
-        {
-            if(match[2].str() == " calendar-verycomplete")
-            {
-                return "**";
-            }
-            else if(match[2].str() == " calendar-complete")
-            {
-                return "*";
-            }
-
-            return {};
-        }();
-
-        dayStatus[dayNumber] = stars;
-    }
-
-    std::stringstream ss;
-    for(auto day = 1; const auto& stars : dayStatus)
-    {
-        ss << std::setw(2) << day << ": " << stars << "\n";
-        ++day;
-    }
-
-    return ss.str();
-}
-
-std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
-{
-    AocGetRequest request;
-    request.setPage(std::format("{}/leaderboard/private/view/{}", YEAR, leaderBoardId));
-    request.setContentType("text/html");
-    request.setBeginAndEndTags(R"(<form method="post">)", "</form>");
-
-    const auto content = AocRequestManager::Instance().doRequest(&request);
-    auto html = HtmlFormatter::Format(content);
-
-    // Not an ideal solution, but it works for now.
-
-    // Remove header that gets formatted incorrectly.
-    const std::string daysHeader = "12345678910111213141516171819202122232425";
-    html.erase(html.find(daysHeader), daysHeader.size());
-
-    {
-        // Remove day status that gets formatted incorrectly.
-        const std::string stars = "*************************  ";
-        auto idx = html.find(stars);
-        while(idx != std::string::npos)
-        {
-            html.erase(idx, stars.size());
-            idx = html.find(stars);
-        }
-    }
-
-    {
-        // Remove preceding whitespace.
-        const std::string whitespace = "\n      \n";
-        if(const auto idx = html.find(whitespace); idx != std::string::npos)
-        {
-            html.erase(idx, whitespace.size());
-        }
-    }
-
-    return html;
-}
-
-std::string SubmitAnswer(const std::string& answer, const std::string& part)
-{
-    AocPostRequest request;
-
-    // TODO: Don't hardcode
-    request.setPage(std::format("{}/day/{}/answer", YEAR, DAY));
-    request.setBeginAndEndTags("<main>", R"(</main>)");
-    request.setPostContent(std::format("level={}&answer={}", part, answer));
-
-    const auto content = AocRequestManager::Instance().doRequest(&request);
-    return HtmlFormatter::Format(content);
 }
 
 int main(int argc, char** argv)
@@ -253,23 +136,20 @@ int main(int argc, char** argv)
 
         const auto command = result["command"].as<std::string>();
 
-        // WIDTH = result["width"].as<std::uint16_t>();
-
         SESSION_FILE = result["session-file"].as<std::string>();
         AocRequestManager::Instance().setSessionFile(SESSION_FILE);
-
-        // YEAR = result["year"].as<std::string>();
-        // ValidateYear();
-
-        // If day is not provided, assume it's the last day completed by the user.
-        // DAY = result["day"].as<std::string>();
-        // ValidateDay();
 
         AocClient client;
         client.setBaseUrl("https://adventofcode.com");
         client.setPrinter(Printer{result["width"].as<std::uint16_t>()});
         client.setYear(result["year"].as<std::string>());
+        // ValidateYear();
         client.setDay(result["day"].as<std::string>());
+        // ValidateDay();
+
+        // TODO: Add more granular control over what is printed.
+        const auto shouldRead = command == "read";
+        client.setReadDownloads(shouldRead);
 
         if(command == "read")
         {
@@ -280,7 +160,8 @@ int main(int argc, char** argv)
                 // Don't enforce a width on input because that changes the meaning of the input.
                 // TODO: Check for the following string
                 // Puzzle inputs differ by user.  Please log in to get your puzzle input.
-                Printer{GetPuzzleInput()}();
+                // Printer{GetPuzzleInput()}();
+                client.downloadPuzzleInput();
             }
             else if(result["sample-only"].count() && result["sample-only"].as<bool>())
             {
@@ -292,7 +173,9 @@ int main(int argc, char** argv)
             }
             else
             {
-                GetPuzzleInput();
+                // GetPuzzleInput();
+                client.downloadPuzzleInput();
+
                 GetPuzzleInputSample();
 
                 Printer{GetPuzzleDescription(), WIDTH}();
@@ -304,7 +187,8 @@ int main(int argc, char** argv)
             // Surely there's a more elegant way to do this
             if(result["input-only"].count() && result["input-only"].as<bool>())
             {
-                GetPuzzleInput();
+                // GetPuzzleInput();
+                client.downloadPuzzleInput();
             }
             else if(result["sample-only"].count() && result["sample-only"].as<bool>())
             {
@@ -316,7 +200,8 @@ int main(int argc, char** argv)
             }
             else
             {
-                GetPuzzleInput();
+                // GetPuzzleInput();
+                client.downloadPuzzleInput();
                 GetPuzzleInputSample();
                 GetPuzzleDescription();
             }

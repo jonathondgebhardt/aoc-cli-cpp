@@ -92,6 +92,7 @@ std::string AocRequestManager::readOrDownload(const std::string& file, HttpsRequ
 
 HtmlContent AocRequestManager::doRequest(HttpsRequest* request)
 {
+    // TODO: This probably shouldn't be set by this.
     request->setCookie(mSessionCookie);
 
     Throttler t{request, mWaitTime,

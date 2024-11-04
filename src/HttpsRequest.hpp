@@ -59,6 +59,7 @@ public:
     //! These tags will be given to HtmlContent.
     void setBeginAndEndTags(const std::string& begin, const std::string& end);
 
+    //! \brief Set content to post and enables post mode.
     void setPostContent(const std::string& content);
 
     //! \brief Perform the request.
