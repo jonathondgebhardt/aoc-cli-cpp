@@ -11,10 +11,19 @@
 class AocClient
 {
 public:
+    //! \brief Print the calendar showing puzzle status.
+    //! The calendar output width will not be restricted.
     void calendar();
     void download();
     void read();
+
+    //! \brief Submit the answer and print the response.
+    //! Year, day, part, and answer must be set.
     void submit();
+
+    //! \brief Print the private leaderboard.
+    //! Year and private leaderboard id must be set. Private leaderboard output width will not be
+    //! restricted.
     void privateLeaderboard();
 
     //! \brief Set the printer to use.
@@ -22,6 +31,7 @@ public:
     // (.e.g, puzzle input).
     void setPrinter(Printer printer) { mPrinter = std::move(printer); }
 
+    void setBaseUrl(std::string baseUrl) { mBaseUrl = std::move(baseUrl); }
     void setSessionFile(std::string sessionFile) { mSessionFile = std::move(sessionFile); }
     void setHttpsRequestBaseUrl(std::string baseUrl) { mHttpsRequestBaseUrl = std::move(baseUrl); }
     void setPrivateLeaderboardId(std::string leaderboardId)
@@ -36,6 +46,7 @@ public:
 
 private:
     Printer mPrinter;
+    std::string mBaseUrl;
     std::string mSessionFile;
     std::string mHttpsRequestBaseUrl;
     std::string mPrivateLeaderboardId;

@@ -7,14 +7,13 @@
 #include <regex>
 #include <sstream>
 
-#include "AocHttpsRequest.hpp"
 #include "AocRequestManager.hpp"
 #include "HtmlFormatter.hpp"
 
 void AocClient::calendar()
 {
-    AocGetRequest request;
-    request.setPage(mYear);
+    HttpsRequest request;
+    request.setUrl(std::format("{}/{}", mBaseUrl, mYear));
     request.setContentType("text/html");
     request.setBeginAndEndTags(R"(<pre class="calendar">)", "</pre>");
 
@@ -73,8 +72,8 @@ void AocClient::read() {}
 
 void AocClient::submit()
 {
-    AocPostRequest request;
-    request.setPage(std::format("{}/day/{}/answer", mYear, mDay));
+    HttpsRequest request;
+    request.setUrl(std::format("{}/{}/day/{}/answer", mBaseUrl, mYear, mDay));
     request.setBeginAndEndTags("<main>", R"(</main>)");
     request.setPostContent(std::format("level={}&answer={}", mPart, mAnswer));
 
@@ -85,8 +84,9 @@ void AocClient::submit()
 
 void AocClient::privateLeaderboard()
 {
-    AocGetRequest request;
-    request.setPage(std::format("{}/leaderboard/private/view/{}", mYear, mPrivateLeaderboardId));
+    HttpsRequest request;
+    request.setUrl(
+        std::format("{}/{}/leaderboard/private/view/{}", mBaseUrl, mYear, mPrivateLeaderboardId));
     request.setContentType("text/html");
     request.setBeginAndEndTags(R"(<form method="post">)", "</form>");
 

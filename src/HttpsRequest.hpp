@@ -59,6 +59,8 @@ public:
     //! These tags will be given to HtmlContent.
     void setBeginAndEndTags(const std::string& begin, const std::string& end);
 
+    void setPostContent(const std::string& content);
+
     //! \brief Perform the request.
     //! Only performs a request once.
     HtmlContent operator()();
@@ -77,5 +79,6 @@ private:
     std::string mSessionFilePath;
     std::string mBegin;
     std::string mEnd;
+    std::string mPostContent;
     bool mRequestHandled = false;
 };

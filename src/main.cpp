@@ -266,6 +266,7 @@ int main(int argc, char** argv)
         // ValidateDay();
 
         AocClient client;
+        client.setBaseUrl("https://adventofcode.com");
         client.setPrinter(Printer{result["width"].as<std::uint16_t>()});
         client.setYear(result["year"].as<std::string>());
         client.setDay(result["day"].as<std::string>());

@@ -29,6 +29,9 @@ HttpsRequest::HttpsRequest()
     const auto userAgent =
         "https://github.com/jonathondgebhardt/aoc-cli-cpp by jonathon.gebhardt@gmail.com";
     curl_easy_setopt(mCurl, CURLOPT_USERAGENT, userAgent);
+
+    curl_easy_setopt(mCurl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(mCurl, CURLOPT_WRITEDATA, &mReadBuffer);
 }
 
 HttpsRequest::~HttpsRequest() noexcept
@@ -62,6 +65,17 @@ void HttpsRequest::setBeginAndEndTags(const std::string& begin, const std::strin
 {
     mBegin = begin;
     mEnd = end;
+}
+
+void HttpsRequest::setPostContent(const std::string& content)
+{
+    // Copy the post content to guarantee no lifetime issues. CURLOPT_POSTFIELDS does not copy
+    // the post content.
+    mPostContent = content;
+    curl_easy_setopt(mCurl, CURLOPT_POSTFIELDS, mPostContent.c_str());
+
+    // Make the request a post one.
+    curl_easy_setopt(mCurl, CURLOPT_POST, 1L);
 }
 
 HtmlContent HttpsRequest::operator()()
