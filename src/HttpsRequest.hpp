@@ -21,7 +21,7 @@ public:
         mSessionFilePath = std::exchange(other.mSessionFilePath, std::string());
         mBegin = std::exchange(other.mBegin, std::string());
         mEnd = std::exchange(other.mEnd, std::string());
-        mGetRequested = other.mGetRequested;
+        mRequestHandled = other.mRequestHandled;
     }
 
     virtual ~HttpsRequest() noexcept;
@@ -39,7 +39,7 @@ public:
         mSessionFilePath = std::exchange(other.mSessionFilePath, std::string());
         mBegin = std::exchange(other.mBegin, std::string());
         mEnd = std::exchange(other.mEnd, std::string());
-        mGetRequested = other.mGetRequested;
+        mRequestHandled = other.mRequestHandled;
 
         return *this;
     }
@@ -77,5 +77,5 @@ private:
     std::string mSessionFilePath;
     std::string mBegin;
     std::string mEnd;
-    bool mGetRequested = false;
+    bool mRequestHandled = false;
 };

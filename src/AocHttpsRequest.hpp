@@ -2,6 +2,8 @@
 
 #include "HttpsRequest.hpp"
 
+// TODO: Consider deleting these specializations
+
 //! \brief A specialization of HttpsRequest specific to Advent of Code.
 class AocHttpsRequest : public HttpsRequest
 {

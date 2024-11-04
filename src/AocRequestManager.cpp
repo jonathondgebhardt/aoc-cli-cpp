@@ -59,16 +59,6 @@ namespace
     }
 }
 
-AocRequestManager& AocRequestManager::Instance()
-{
-    static AocRequestManager manager;
-    return manager;
-}
-
-AocRequestManager::AocRequestManager() { curl_global_init(CURL_GLOBAL_DEFAULT); }
-
-AocRequestManager::~AocRequestManager() { curl_global_cleanup(); }
-
 void AocRequestManager::setSessionFile(const std::string& sessionFile)
 {
     mSessionCookie = GetSessionCookie(sessionFile);

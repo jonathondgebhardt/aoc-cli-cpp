@@ -22,7 +22,27 @@ public:
         }
     }
 
+    Throttler() = default;
+    Throttler(const Throttler&) = delete;
+
+    Throttler(Throttler&& other) noexcept
+    {
+        mRequest = std::exchange(other.mRequest, nullptr);
+        mFile = std::move(other.mFile);
+        mWaitTime = other.mWaitTime;
+    }
+
     ~Throttler() noexcept = default;
+    Throttler& operator=(const Throttler&) = delete;
+
+    Throttler& operator=(Throttler&& other) noexcept
+    {
+        mRequest = std::exchange(other.mRequest, nullptr);
+        mFile = std::move(other.mFile);
+        mWaitTime = other.mWaitTime;
+
+        return *this;
+    }
 
     //! \brief If necessary, waits the amount of time, then makes the request.
     [[nodiscard]] HtmlContent handleRequest() const;

@@ -17,8 +17,6 @@
 
 namespace
 {
-    AocRequestManager REQUEST_MANAGER = AocRequestManager::Instance();
-
     const char* DOWNLOAD_PREFIX = ".aoc-cli";
     const char* INPUT_PREFIX = "input";
     const char* PUZZLE_PREFIX = "puzzle";
@@ -54,18 +52,18 @@ std::string GetPuzzleDescription()
 
     const auto puzzle =
         std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, PUZZLE_PREFIX, DAY);
-    return REQUEST_MANAGER.readOrDownload(puzzle, &request);
+    return AocRequestManager::Instance().readOrDownload(puzzle, &request);
 }
 
 std::string GetPuzzleInput()
 {
     AocGetRequest request;
-    request.setPage(YEAR + "/day/" + DAY + "/input");
+    request.setPage(std::format("{}/day/{}/input", YEAR, DAY));
     request.setContentType("text/plain");
 
     const auto input =
         std::format("{}/{}/{}/{}.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
-    return REQUEST_MANAGER.readOrDownload(input, &request);
+    return AocRequestManager::Instance().readOrDownload(input, &request);
 }
 
 // FIXME: Make caching more intelligent.
@@ -81,7 +79,7 @@ std::string GetPuzzleInputSample()
 
     const auto puzzle =
         std::format("{}/{}/{}/{}_sample.txt", GetHomePath(), DOWNLOAD_PREFIX, INPUT_PREFIX, DAY);
-    return REQUEST_MANAGER.readOrDownload(puzzle, &request);
+    return AocRequestManager::Instance().readOrDownload(puzzle, &request);
 }
 
 std::string GetCalendar()
@@ -91,7 +89,7 @@ std::string GetCalendar()
     request.setContentType("text/html");
     request.setBeginAndEndTags(R"(<pre class="calendar">)", "</pre>");
 
-    const auto content = REQUEST_MANAGER.doRequest(&request);
+    const auto content = AocRequestManager::Instance().doRequest(&request);
     const auto html = content();
 
     std::array<std::string, 25> dayStatus;
@@ -145,7 +143,7 @@ std::string GetPrivateLeaderBoard(const std::string& leaderBoardId)
     request.setContentType("text/html");
     request.setBeginAndEndTags(R"(<form method="post">)", "</form>");
 
-    const auto content = REQUEST_MANAGER.doRequest(&request);
+    const auto content = AocRequestManager::Instance().doRequest(&request);
     auto html = HtmlFormatter::Format(content);
 
     // Not an ideal solution, but it works for now.
@@ -186,7 +184,7 @@ std::string SubmitAnswer(const std::string& answer)
     request.setBeginAndEndTags("<main>", R"(</main>)");
     request.setPostContent(std::format("level={}&answer={}", 1, answer));
 
-    const auto content = REQUEST_MANAGER.doRequest(&request);
+    const auto content = AocRequestManager::Instance().doRequest(&request);
     return HtmlFormatter::Format(content);
 }
 
@@ -247,7 +245,7 @@ int main(int argc, char** argv)
         WIDTH = result["width"].as<std::uint16_t>();
 
         SESSION_FILE = result["session-file"].as<std::string>();
-        REQUEST_MANAGER.setSessionFile(SESSION_FILE);
+        AocRequestManager::Instance().setSessionFile(SESSION_FILE);
 
         YEAR = result["year"].as<std::string>();
         ValidateYear();

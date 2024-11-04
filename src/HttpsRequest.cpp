@@ -66,14 +66,14 @@ void HttpsRequest::setBeginAndEndTags(const std::string& begin, const std::strin
 
 HtmlContent HttpsRequest::operator()()
 {
-    if(!mReadBuffer.empty() && mGetRequested)
+    if(!mReadBuffer.empty() && mRequestHandled)
     {
         return HtmlContent{mReadBuffer};
     }
 
     if(auto res = curl_easy_perform(mCurl); res == CURLE_OK)
     {
-        mGetRequested = true;
+        mRequestHandled = true;
         return HtmlContent{mReadBuffer, mBegin, mEnd};
     }
     else

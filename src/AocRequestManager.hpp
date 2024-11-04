@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include <curl/curl.h>
+
 #include "HttpsRequest.hpp"
 
 //! \brief Manages making HTTPS requests to Advent of Code.
@@ -9,9 +11,22 @@
 class AocRequestManager
 {
 public:
-    static AocRequestManager& Instance();
-    ~AocRequestManager();
+    static AocRequestManager& Instance()
+    {
+        static AocRequestManager manager;
+        return manager;
+    }
 
+    // TODO: Move should be possible. Copy could be possible with reference counting to prevent
+    // unnecessary global cleanup.
+    AocRequestManager(const AocRequestManager&) = delete;
+    AocRequestManager(AocRequestManager&&) noexcept = delete;
+    ~AocRequestManager() { curl_global_cleanup(); }
+    AocRequestManager& operator=(const AocRequestManager&) = delete;
+    AocRequestManager& operator=(AocRequestManager&&) noexcept = delete;
+
+    // TODO: Consider doing file i/o outside of this class and just accepting the session cookie
+    // instead.
     //! \brief Set the session cookie file
     void setSessionFile(const std::string& sessionFile);
 
@@ -31,7 +46,7 @@ public:
     HtmlContent doRequest(HttpsRequest* request);
 
 private:
-    AocRequestManager();
+    AocRequestManager() { curl_global_init(CURL_GLOBAL_DEFAULT); }
 
     std::string mSessionCookie;
     std::string mDownloadPrefix{".aoc-cli"};
