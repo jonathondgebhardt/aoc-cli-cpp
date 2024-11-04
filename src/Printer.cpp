@@ -1,20 +1,20 @@
 #include "Printer.hpp"
 
 #include <iostream>
-#include <regex>
 
 void Printer::operator()() const
 {
-    if(mWidth == 0)
+    if(!mWidth.has_value())
     {
         std::cout << mContent;
     }
     else
     {
+        const auto width = mWidth.value();
         decltype(mContent.size()) begin = 0;
         while(begin < mContent.size())
         {
-            auto line = mContent.substr(begin, mWidth);
+            auto line = mContent.substr(begin, width);
 
             if(const auto newLine = line.find_last_of('\n'); newLine != std::string::npos)
             {
@@ -24,7 +24,7 @@ void Printer::operator()() const
                 std::cout << line;
                 begin += line.size();
             }
-            else if(!std::isspace(line[mWidth - 1]))
+            else if(!std::isspace(line[width - 1]))
             {
                 // If a line doesn't end in whitespace, that means we're cutting off a word. Go
                 // backwards.
