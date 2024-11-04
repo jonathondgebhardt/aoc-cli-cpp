@@ -84,18 +84,6 @@ std::string GetPuzzleInputSample()
     return REQUEST_MANAGER.readOrDownload(puzzle, &request);
 }
 
-// FIXME: The calendar retrieved by this function makes it look like you've solved every problem.
-//  Go you!
-//
-// aoc-cli-rust handles this by looking for 'calendar-verycomplete' as two stars,
-// 'calendar-complete' as one star, and anything else as no stars.
-//
-// clang-format off
-// <a aria-label="Day 11, one star" href="/2022/day/11" class="calendar-day11 calendar-complete"> ... 
-// <a aria-label="Day 10, two stars" href="/2022/day/10" class="calendar-day10 calendar-verycomplete"> ...
-// clang-format on
-//
-// I'm using libxml so I lose this information entirely.
 std::string GetCalendar()
 {
     AocGetRequest request;
@@ -192,7 +180,7 @@ std::string SubmitAnswer(const std::string& answer)
     // TODO: Don't hardcode
     request.setPage(std::format("{}/day/{}/answer", YEAR, DAY));
     request.setBeginAndEndTags("<main>", R"(</main>)");
-    request.setPostContent(std::format("level={}&answer={}", 1, 42));
+    request.setPostContent(std::format("level={}&answer={}", 1, answer));
 
     const auto content = REQUEST_MANAGER.doRequest(&request);
     return HtmlFormatter::Format(content);
@@ -207,8 +195,11 @@ int main(int argc, char** argv)
 
         // TODO: Don't blatantly copy+paste from rust aoc-cli :(
         // clang-format off
-        options.add_options()("command", std::string(), cxxopts::value<std::string>()->default_value("read"));
-        options.parse_positional({"command"});
+        options.add_options()
+            ("command", std::string(), cxxopts::value<std::string>()->default_value("read"))
+            ("command_option", std::string(), cxxopts::value<std::string>())
+            ;
+        options.parse_positional({"command", "command_option"});
 
         options.add_options()
             ("y,year", "Puzzle year", cxxopts::value<std::string>()->default_value(GetCurrentYear()))
@@ -230,11 +221,11 @@ int main(int argc, char** argv)
         options.positional_help(
             "[OPTIONS]\n\n"
                     "Commands:\n\n"
-                    "  calendar                Show Advent of Code calendar and stars collected\n"
-                    "  download                Save puzzle description and input to files\n"
-                    "  read                    Read puzzle statement (the default command)\n"
-                    "  submit                  Submit puzzle answer\n"
-                    "  private-leaderboard     Show the state of a private leaderboard\n\n"
+                    "  calendar                               Show Advent of Code calendar and stars collected\n"
+                    "  download                               Save puzzle description and input to files\n"
+                    "  read                                   Read puzzle statement (the default command)\n"
+                    "  submit ANSWER                          Submit puzzle answer\n"
+                    "  private-leaderboard LEADERBOARD_ID     Show the state of a private leaderboard\n\n"
             "Options:"
         );
         // clang-format on
@@ -318,13 +309,13 @@ int main(int argc, char** argv)
         }
         else if(command == "submit")
         {
-            // TODO: Get answer from command line
-            Printer{SubmitAnswer(std::string())}();
+            const auto answer = result["command_option"].as<std::string>();
+            Printer{SubmitAnswer(answer)}();
         }
         else if(command == "private-leaderboard")
         {
-            // TODO: Get leader board from command line?
-            Printer{GetPrivateLeaderBoard("192073")}();
+            const auto leaderboardId = result["command_option"].as<std::string>();
+            Printer{GetPrivateLeaderBoard(leaderboardId)}();
         }
         else
         {
