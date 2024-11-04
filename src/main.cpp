@@ -243,6 +243,13 @@ int main(int argc, char** argv)
             return EXIT_SUCCESS;
         }
 
+        if(result["version"].count())
+        {
+            // TODO: Come up with a better versioning scheme. Would like to include date.
+            std::cout << argv[0] << " v0.1\n";
+            return EXIT_SUCCESS;
+        }
+
         const auto command = result["command"].as<std::string>();
 
         WIDTH = result["width"].as<std::uint16_t>();
