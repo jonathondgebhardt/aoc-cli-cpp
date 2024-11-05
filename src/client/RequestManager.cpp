@@ -110,6 +110,7 @@ std::string RequestManager::readOrDownload(HttpsRequest& request)
     const auto& file = std::format("{}/{}/{}.html", home, mDownloadPrefix, request.getPage());
     if(std::filesystem::exists(file))
     {
+        // FIXME: If the user pipes the output to a file, this string will show up.
         std::println("File '{}' found on system", file);
 
         const HtmlContent html{ReadFileIntoString(file), request.getBeginTag(),

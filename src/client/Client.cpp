@@ -103,10 +103,10 @@ void Client::downloadPuzzleInput()
     // TODO: Check for the following string
     // Puzzle inputs differ by user.  Please log in to get your puzzle input.
 
-    if(const auto content = RequestManager::Instance().readOrDownload(request); mReadDownloads)
+    if(const auto content = RequestManager::Instance().doRequest(request); mReadDownloads)
     {
         // Don't enforce a width on input because that changes the meaning of the input.
-        Printer p{content};
+        Printer p{HtmlFormatter{content}()};
         p();
     }
 }
@@ -121,9 +121,12 @@ void Client::downloadPuzzleDescription()
 
     // TODO: Implement part support
 
-    if(const auto content = RequestManager::Instance().readOrDownload(request); mReadDownloads)
+    // FIXME: We won't download again once we have the file, obviously. If part 1 is completed and
+    // the user wants to get the puzzle again for part 2, we don't download because we already "have
+    // it".
+    if(const auto content = RequestManager::Instance().doRequest(request); mReadDownloads)
     {
-        mPrinter.setContent(content);
+        mPrinter.setContent(HtmlFormatter{content}());
         mPrinter();
     }
 }
@@ -138,10 +141,10 @@ void Client::downloadPuzzleSampleInput()
 
     // TODO: Implement part support
 
-    if(const auto content = RequestManager::Instance().readOrDownload(request); mReadDownloads)
+    if(const auto content = RequestManager::Instance().doRequest(request); mReadDownloads)
     {
         // Don't enforce a width on input because that changes the meaning of the input.
-        Printer p{content};
+        Printer p{HtmlFormatter{content}()};
         p();
     }
 }
@@ -152,8 +155,28 @@ void Client::submit()
     request.setBaseUrl(mBaseUrl);
     request.setPage(std::format("{}/day/{}/answer", mYear, mDay));
     request.setBeginAndEndTags("<main>", R"(</main>)");
+
+    // TODO: I should automatically handle the part to submit.
     request.setPostContent(std::format("level={}&answer={}", mPart, mAnswer));
 
+    // TODO: Further cleanup content:
+    /*
+    That's not the right answer.  If you're stuck, make sure you're using the full input data; there
+    are also some general tips on the about page, or you can ask for hints on the subreddit.  Please
+    wait one minute before trying again. [Return to Day 1]
+    */
+    /*
+    That's the right answer!  You are one gold star closer to powering the weather machine.
+    [Continue to Part Two]
+    */
+    /*
+    You don't seem to be solving the right level.  Did you already complete it? [Return to Day 1]
+    */
+    /*
+    That's the right answer!  You are one gold star closer to powering the weather machine.You have
+    completed Day 1! You can [Shareon Twitter Mastodon] this victory or [Return to Your Advent
+    Calendar].
+    */
     const auto content = RequestManager::Instance().doRequest(request);
     mPrinter.setContent(HtmlFormatter::Format(content));
     mPrinter();
