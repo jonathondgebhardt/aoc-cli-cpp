@@ -10,7 +10,7 @@
 #include "HtmlFormatter.hpp"
 #include "RequestManager.hpp"
 
-void Client::calendar()
+void Client::calendar() const
 {
     HttpsRequest request;
     request.setBaseUrl(mBaseUrl);

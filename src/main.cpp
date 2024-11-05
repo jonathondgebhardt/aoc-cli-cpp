@@ -1,31 +1,13 @@
-#include <array>
 #include <cstdlib>
 #include <cxxopts.hpp>
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <iostream>
-#include <regex>
 
 #include "client/Client.hpp"
-#include "client/HtmlContent.hpp"
-#include "client/HtmlFormatter.hpp"
-#include "client/HttpsRequest.hpp"
 #include "client/Printer.hpp"
 #include "client/RequestManager.hpp"
 #include "client/System.hpp"
-
-namespace
-{
-    const char* DOWNLOAD_PREFIX = ".aoc-cli";
-    const char* INPUT_PREFIX = "input";
-    const char* PUZZLE_PREFIX = "puzzle";
-
-    std::uint16_t WIDTH = 0;
-    std::string YEAR; // TODO: Allow this to be defined with a preprocessor directive?
-    std::string DAY;
-    std::string SESSION_FILE;
-}
 
 // void ValidateYear()
 // {
@@ -43,7 +25,7 @@ namespace
 //     }
 // }
 
-int main(int argc, char** argv)
+int main(const int argc, char** argv)
 {
     try
     {
@@ -107,8 +89,7 @@ int main(int argc, char** argv)
 
         const auto command = result["command"].as<std::string>();
 
-        SESSION_FILE = result["session-file"].as<std::string>();
-        RequestManager::Instance().setSessionFile(SESSION_FILE);
+        RequestManager::Instance().setSessionFile(result["session-file"].as<std::string>());
 
         Client client;
         client.setBaseUrl("https://adventofcode.com");

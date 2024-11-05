@@ -12,10 +12,10 @@ public:
     explicit HtmlFormatter(const std::string& html) { extractContent(html); }
 
     HtmlFormatter() = default;
-    HtmlFormatter(const HtmlFormatter&) = default;
+    HtmlFormatter(const HtmlFormatter&) = delete;
     HtmlFormatter(HtmlFormatter&&) noexcept = default;
     ~HtmlFormatter() noexcept = default;
-    HtmlFormatter& operator=(const HtmlFormatter&) = default;
+    HtmlFormatter& operator=(const HtmlFormatter&) = delete;
     HtmlFormatter& operator=(HtmlFormatter&&) noexcept = default;
 
     void setHtml(const HtmlContent& html) { extractContent(html.extracted()); }

@@ -6,39 +6,58 @@
 static std::string GetHomePath()
 {
 #ifdef WIN32
-    //  TODO: Test this
-    // FIXME: Resharper complains this is deprecated.
-    if(const auto homeDrive = std::getenv("HOMEDRIVE"))
+    const auto userProfile = "USERPROFILE";
+
+    char* val{nullptr};
+    std::size_t len;
+
+    if(const auto res = _dupenv_s(&val, &len, userProfile); res != 0)
     {
-        // FIXME: Resharper complains this is deprecated.
-        if(const auto homePath = std::getenv("HOMEPATH"))
-        {
-            // Surely there's a more elegant way to do this.
-            return std::string(homeDrive) + "/" + std::string(homePath);
-        }
+        throw std::runtime_error(
+            std::format("failed to get environment variable '{}': {}", userProfile, res));
     }
 
-    return {};
+    if(len == 0 || val == nullptr)
+    {
+        throw std::runtime_error(
+            std::format("failed to get environment variable '{}'", userProfile));
+    }
+
+    std::string value{val, len};
+    free(val);
+    return value;
 
 #else
     return std::getenv("HOME");
 #endif
 }
 
+static std::tm GetSystemTime()
+{
+    // https://stackoverflow.com/a/58153628
+    const std::time_t t = std::time(nullptr);
+    std::tm pTInfo;
+#ifdef WIN32
+    if(localtime_s(&pTInfo, &t) != 0)
+#else
+    if(localtime_r(&t, &pTInfo) == nullptr)
+#endif
+    {
+        throw std::runtime_error("failed to get system time");
+    }
+
+    return pTInfo;
+}
+
 // If year is not provided, assume it's this year or the previous year's AoC if it's not yet
 // December.
 static std::string GetCurrentYear()
 {
-    // https://stackoverflow.com/a/58153628
-    const std::time_t t = std::time(nullptr);
-
-    // FIXME: Resharper complains this is deprecated.
-    const std::tm* const pTInfo = std::localtime(&t);
-
-    auto currentYear = 1900 + pTInfo->tm_year;
+    const auto time = GetSystemTime();
+    auto currentYear = 1900 + time.tm_year;
 
     // AoC starts December 1st. If it's not December yet, use last year.
-    if(pTInfo->tm_mon < 11)
+    if(time.tm_mon < 11)
     {
         --currentYear;
     }
@@ -48,10 +67,4 @@ static std::string GetCurrentYear()
 
 // FIXME: This should be getting the last unlocked day. Not sure if I wanna make an HTTPS request
 // just for that though.
-static std::string GetCurrentDay()
-{
-    // https://stackoverflow.com/a/58153628
-    const std::time_t t = std::time(nullptr);
-    const std::tm* const pTInfo = std::localtime(&t);
-    return {std::to_string(pTInfo->tm_mday)};
-}
+static std::string GetCurrentDay() { return {std::to_string(GetSystemTime().tm_mday)}; }

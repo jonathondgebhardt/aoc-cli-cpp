@@ -13,7 +13,7 @@ class Client
 public:
     //! \brief Print the calendar showing puzzle status.
     //! The calendar output width will not be restricted.
-    void calendar();
+    void calendar() const;
 
     struct DownloadConfig
     {

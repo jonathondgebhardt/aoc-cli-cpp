@@ -68,19 +68,22 @@ HttpsRequest::~HttpsRequest() noexcept
 
 HttpsRequest& HttpsRequest::operator=(const HttpsRequest& other)
 {
-    if(mCurl)
+    if(this != &other)
     {
-        curl_easy_cleanup(mCurl);
-    }
+        if(mCurl)
+        {
+            curl_easy_cleanup(mCurl);
+        }
 
-    mCurl = curl_easy_duphandle(other.mCurl);
-    mBaseUrl = other.mBaseUrl;
-    mPage = other.mPage;
-    mReadBuffer = other.mReadBuffer;
-    mSessionFilePath = other.mSessionFilePath;
-    mBegin = other.mBegin;
-    mEnd = other.mEnd;
-    mRequestHandled = other.mRequestHandled;
+        mCurl = curl_easy_duphandle(other.mCurl);
+        mBaseUrl = other.mBaseUrl;
+        mPage = other.mPage;
+        mReadBuffer = other.mReadBuffer;
+        mSessionFilePath = other.mSessionFilePath;
+        mBegin = other.mBegin;
+        mEnd = other.mEnd;
+        mRequestHandled = other.mRequestHandled;
+    }
 
     return *this;
 }

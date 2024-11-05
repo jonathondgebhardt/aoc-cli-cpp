@@ -46,7 +46,7 @@ public:
     // TODO: Consider making this private. Encapsulating making an HTTPS request or reading from the
     // filesystem is the point of this class.
     //! \brief Performs the HTTPS request and delays it if necessary.
-    HtmlContent doRequest(HttpsRequest& request);
+    HtmlContent doRequest(HttpsRequest& request) const;
 
 private:
     RequestManager() { curl_global_init(CURL_GLOBAL_DEFAULT); }

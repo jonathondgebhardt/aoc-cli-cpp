@@ -129,7 +129,7 @@ std::string RequestManager::readOrDownload(HttpsRequest& request)
     return HtmlFormatter{content}();
 }
 
-HtmlContent RequestManager::doRequest(HttpsRequest& request)
+HtmlContent RequestManager::doRequest(HttpsRequest& request) const
 {
     // TODO: This probably shouldn't be set by this.
     request.setCookie(mSessionCookie);
@@ -165,10 +165,17 @@ std::optional<double> RequestManager::getTimeToWait() const
             std::format("could not stat file '{}': {}", mBookkeepingFile, res));
     }
 
-    auto mod_time = fileStat.st_mtime;
+    // https://stackoverflow.com/a/58153628
+    const std::time_t t = std::time(nullptr);
+    std::tm pTInfo;
+#ifdef WIN32
+    if(localtime_s(&pTInfo, &t) != 0)
+#else
+    if(localtime_r(&t, &pTInfo) == nullptr)
+#endif
+    {
+        throw std::runtime_error("failed to get system time");
+    }
 
-    std::time_t t = std::time(nullptr);
-    std::localtime(&t);
-
-    return mWaitTime - difftime(t, mod_time);
+    return mWaitTime - difftime(t, fileStat.st_mtime);
 }
