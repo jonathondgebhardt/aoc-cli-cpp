@@ -4,7 +4,7 @@
 
 void Printer::operator()() const
 {
-    if(!mWidth.has_value())
+    if(!mWidth.has_value() || mWidth.value() == 0)
     {
         std::cout << mContent;
     }
@@ -24,7 +24,8 @@ void Printer::operator()() const
                 std::cout << line;
                 begin += line.size();
             }
-            else if(!std::isspace(line[width - 1]))
+            else if(const auto idx = width - 1;
+                    !line.empty() && idx > 0 && !std::isspace(line[idx]))
             {
                 // If a line doesn't end in whitespace, that means we're cutting off a word. Go
                 // backwards.
