@@ -3,30 +3,54 @@
 #include <ctime>
 #include <string>
 
+#ifdef WIN32
+#include <processenv.h>
+#endif
+
 static std::string GetHomePath()
 {
 #ifdef WIN32
-    const auto userProfile = "USERPROFILE";
+    // Here lies my failed attempts at using a non-deprecated function. I admitted defeat and just
+    // used the deprecated function.
 
-    char* val{nullptr};
-    std::size_t len;
+    // std::string val;
+    // val.reserve(MAX_PATH);
 
-    if(const auto res = _dupenv_s(&val, &len, userProfile); res != 0)
-    {
-        throw std::runtime_error(
-            std::format("failed to get environment variable '{}': {}", userProfile, res));
-    }
+    // const auto userProfile = "USERPROFILE";
+    // if(GetEnvironmentVariableA(userProfile, val.data(), static_cast<DWORD>(val.size())) == 0)
+    //{
+    //     const auto error = GetLastError();
+    //     throw std::runtime_error(
+    //         std::format("failed to get environment variable '{}': {}", userProfile, error));
+    // }
 
-    if(len == 0 || val == nullptr)
-    {
-        throw std::runtime_error(
-            std::format("failed to get environment variable '{}'", userProfile));
-    }
+    // if(val.empty())
+    //{
+    //     throw std::runtime_error(
+    //         std::format("failed to get environment variable '{}'. Win32 API returned empty
+    //         string.",
+    //                     userProfile));
+    // }
 
-    std::string value{val, len};
-    free(val);
-    return value;
+    // return val;
 
+    // if(const auto res = _dupenv_s(&val, &len, userProfile); res != 0)
+    //{
+    //     throw std::runtime_error(
+    //         std::format("failed to get environment variable '{}': {}", userProfile, res));
+    // }
+
+    // if(len == 0 || val == nullptr)
+    //{
+    //     throw std::runtime_error(
+    //         std::format("failed to get environment variable '{}'", userProfile));
+    // }
+
+    // std::string value{val, len};
+    // free(val);
+    // return value;
+
+    return std::getenv("USERPROFILE");
 #else
     return std::getenv("HOME");
 #endif

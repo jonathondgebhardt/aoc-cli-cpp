@@ -46,7 +46,7 @@ int main(const int argc, char** argv)
             ("d,day", "Puzzle day", cxxopts::value<std::string>()->default_value(GetCurrentDay()))
         // TODO: Implement smart part detection? It probably shouldn't default to 1.
             ("p,part", "Puzzle part", cxxopts::value<std::string>()->default_value("1"))
-            ("s,session-file", "Path to session cookie file", cxxopts::value<std::string>()->default_value(GetHomePath() + "/.adventofcode.session"))
+            ("s,session-file", "Path to session cookie file", cxxopts::value<std::string>()->default_value(std::format("{}/.adventofcode.session", GetHomePath())))
             ("input-only", "Download puzzle input only", cxxopts::value<bool>()->default_value("false"))
             ("sample-only", "Download puzzle input sample only", cxxopts::value<bool>()->default_value("false"))
             ("puzzle-only", "Download puzzle description only", cxxopts::value<bool>()->default_value("false"))

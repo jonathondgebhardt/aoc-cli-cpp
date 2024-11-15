@@ -37,7 +37,7 @@ public:
     //! \brief Set the time to wait between HTTPS requests.
     void setWaitTime(const double waitTime) { mWaitTime = waitTime; }
 
-    //! \brief Set the download prefix to save book-keeping files.
+    //! \brief Set the download prefix to save bookkeeping files.
     void setBookkeepFile(std::string file) { mBookkeepingFile = std::move(file); }
 
     //! \brief Tries to read the file and makes the HTTPS request if it can't be found.
