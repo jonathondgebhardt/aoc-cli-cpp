@@ -100,9 +100,9 @@ void Client::downloadPuzzleInput()
     request.setPage(std::format("{}/day/{}/input", mYear, mDay));
     request.setContentType("text/plain");
 
-    // TODO: Check for the following string
-    // Puzzle inputs differ by user.  Please log in to get your puzzle input.
-
+    // Switching to doRequest from readOrDownload breaks download. Only read works. I still reach
+    // out to the network, but I don't do anything with the request result.
+    // FIXME: download is broken.
     if(const auto content = RequestManager::Instance().doRequest(request); mReadDownloads)
     {
         // Don't enforce a width on input because that changes the meaning of the input.
@@ -121,9 +121,9 @@ void Client::downloadPuzzleDescription()
 
     // TODO: Implement part support
 
-    // FIXME: We won't download again once we have the file, obviously. If part 1 is completed and
-    // the user wants to get the puzzle again for part 2, we don't download because we already "have
-    // it".
+    // Switching to doRequest from readOrDownload breaks download. Only read works. I still reach
+    // out to the network, but I don't do anything with the request result.
+    // FIXME: download is broken.
     if(const auto content = RequestManager::Instance().doRequest(request); mReadDownloads)
     {
         mPrinter.setContent(HtmlFormatter{content}());
@@ -141,6 +141,9 @@ void Client::downloadPuzzleSampleInput()
 
     // TODO: Implement part support
 
+    // Switching to doRequest from readOrDownload breaks download. Only read works. I still reach
+    // out to the network, but I don't do anything with the request result.
+    // FIXME: download is broken.
     if(const auto content = RequestManager::Instance().doRequest(request); mReadDownloads)
     {
         // Don't enforce a width on input because that changes the meaning of the input.
