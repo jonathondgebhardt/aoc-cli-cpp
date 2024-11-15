@@ -50,7 +50,7 @@ int main(const int argc, char** argv)
             ("input-only", "Download puzzle input only", cxxopts::value<bool>()->default_value("false"))
             ("sample-only", "Download puzzle input sample only", cxxopts::value<bool>()->default_value("false"))
             ("puzzle-only", "Download puzzle description only", cxxopts::value<bool>()->default_value("false"))
-            ("w,width", "Width at which to wrap output", cxxopts::value<std::uint16_t>()->default_value("0"))
+            ("w,width", "Width at which to wrap output", cxxopts::value<std::uint16_t>()->default_value("80")) // TODO: Should probably enforce a minimum size
             ("h,help", "Print help information", cxxopts::value<bool>()->default_value("false"))
             ("v,version", "Print version information")
             ;
