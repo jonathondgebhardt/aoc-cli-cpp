@@ -67,6 +67,39 @@ find_package(CURL REQUIRED)
 find_package(LibXml2 REQUIRED)
 target_link_libraries(aoc-cli_aoc-cli PRIVATE CURL::libcurl LibXml2::LibXml2)
 
+# ---- Declare client ----
+add_executable(
+    aoc-cli
+    source/main.cpp
+)
+
+set_target_properties(
+    aoc-cli PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN YES
+    VERSION "${PROJECT_VERSION}"
+    SOVERSION "${PROJECT_VERSION_MAJOR}"
+    EXPORT_NAME aoc-cli
+    OUTPUT_NAME aoc-cli
+)
+
+target_include_directories(
+    aoc-cli_aoc-cli ${warning_guard}
+    PUBLIC
+    "\$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+)
+
+target_include_directories(
+    aoc-cli_aoc-cli SYSTEM
+    PUBLIC
+    "\$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/export>"
+)
+
+target_compile_features(aoc-cli PUBLIC cxx_std_23)
+
+find_package(cxxopts REQUIRED)
+target_link_libraries(aoc-cli PRIVATE aoc-cli_aoc-cli cxxopts::cxxopts)
+
 # ---- Install rules ----
 
 if(NOT CMAKE_SKIP_INSTALL_RULES)
