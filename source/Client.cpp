@@ -1,13 +1,17 @@
 #include <array>
+#include <cstddef>
 #include <format>
 #include <iomanip>
 #include <iostream>
 #include <regex>
 #include <sstream>
+#include <stdexcept>
+#include <string>
 
 #include "aoc-cli/Client.hpp"
 
 #include "aoc-cli/HtmlFormatter.hpp"
+#include "aoc-cli/HttpsRequest.hpp"
 #include "aoc-cli/RequestManager.hpp"
 
 void client::calendar() const
@@ -22,7 +26,7 @@ void client::calendar() const
     const auto& html = content.extracted();
 
     std::array<std::string, 25> day_status;
-    std::regex days{"class=\"calendar-day(\\d{1,2})(\\s?.*?)\">"};
+    const std::regex days{"class=\"calendar-day(\\d{1,2})(\\s?.*?)\">"};
     for (auto i = std::sregex_iterator(html.begin(), html.end(), days),
               end = std::sregex_iterator();
          i != end;
@@ -57,15 +61,16 @@ void client::calendar() const
         day_status[day_number] = stars;
     }
 
-    std::stringstream ss;
+    std::stringstream stream;
     for (auto day = 1; const auto& stars : day_status) {
+        // TODO: Should I be doing stream << ?
         std::cout << std::setw(2) << day << ": " << stars << "\n";
         ++day;
     }
 
     // The calendar is only 6 columns wide due to the way I format it. Don't
     // impose a width because that would make it confusing.
-    printer printer{ss.str()};
+    const printer printer{stream.str()};
     printer();
 }
 
@@ -88,6 +93,7 @@ void client::download(const download_config& config)
         download_puzzle_sample_input();
     }
 
+    // FIXME: not sure what this is meant to be doing
     read_downloads = read_downloads;
 }
 
@@ -107,7 +113,7 @@ void client::download_puzzle_input()
     {
         // Don't enforce a width on input because that changes the meaning of
         // the input.
-        printer printer{html_formatter{content}()};
+        const printer printer{html_formatter{content}()};
         printer();
     }
 }
@@ -233,7 +239,6 @@ void client::private_leaderboard()
 
     // Due to the above formatting, the leaderboard is only 6 columns wide, so
     // avoid formatting.
-    printer printer{html};
+    const printer printer{html};
     printer();
 }
-

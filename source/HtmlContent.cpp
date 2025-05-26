@@ -1,4 +1,5 @@
 #include <sstream>
+#include <string>
 
 #include "aoc-cli/HtmlContent.hpp"
 
@@ -9,7 +10,7 @@ auto html_content::extract() -> std::string
     // TODO: Use regex instead? I've gone down this road with iterative regex
     // matches and had a lot of trouble.
     if (!m_begin.empty() && !m_end.empty()) {
-        std::stringstream ss;
+        std::stringstream stream;
 
         auto begin_index = m_content.find(m_begin);
         while (begin_index != std::string::npos) {
@@ -21,12 +22,12 @@ auto html_content::extract() -> std::string
             }
 
             const auto length = end_index - begin_index;
-            ss << m_content.substr(begin_index, length);
+            stream << m_content.substr(begin_index, length);
 
             begin_index = m_content.find(m_begin, end_index);
         }
 
-        m_extracted_content = ss.str();
+        m_extracted_content = stream.str();
     } else {
         m_extracted_content = m_content;
     }

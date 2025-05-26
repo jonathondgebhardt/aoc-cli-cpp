@@ -1,14 +1,21 @@
+#include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <iterator>
+#include <optional>
 #include <print>
+#include <stdexcept>
+#include <string>
 #include <thread>
 
 #include "aoc-cli/RequestManager.hpp"
 
 #include <sys/stat.h>
 
+#include "aoc-cli/HtmlContent.hpp"
 #include "aoc-cli/HtmlFormatter.hpp"
 
 #ifndef WIN32
@@ -72,7 +79,7 @@ void touch_file(const std::string& file)
         std::filesystem::remove(file);
     }
 
-    std::filesystem::path path{file};
+    const std::filesystem::path path{file};
     if (const auto parent = path.parent_path();
         !std::filesystem::exists(parent))
     {

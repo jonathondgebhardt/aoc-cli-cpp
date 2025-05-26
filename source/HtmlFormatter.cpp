@@ -1,12 +1,14 @@
 #include "aoc-cli/HtmlFormatter.hpp"
 
 #include <libxml/HTMLparser.h>
+#include <libxml/tree.h>
+#include <libxml/xmlstring.h>
 
 namespace
 {
-auto get_string_from_xml_char(const xmlChar* xc) -> std::string
+auto get_string_from_xml_char(const xmlChar* xmlchar) -> std::string
 {
-    return reinterpret_cast<const char*>(xc);
+    return reinterpret_cast<const char*>(xmlchar);
 }
 
 auto is_heading_node(xmlNodePtr node) -> bool
@@ -47,30 +49,30 @@ auto is_list_node(xmlNodePtr node) -> bool
 
 // clang-tidy says don't use recursion: https://stackoverflow.com/a/63939994
 // TODO: Investigate an iterative solution
-void extract_text_nodes(xmlNodePtr node, std::stringstream& ss)
+void extract_text_nodes(xmlNodePtr node, std::stringstream& stream)
 {
     if (node == nullptr) {
         return;
     }
 
     if (is_heading_node(node)) {
-        ss << "\n";
+        stream << "\n";
     }
 
     if (node->type == XML_TEXT_NODE) {
-        ss << node->content;
+        stream << node->content;
 
         if (node->children != nullptr) {
-            ss << "\n\n";
+            stream << "\n\n";
         }
 
         if (is_heading_node(node)) {
-            ss << "\n\n";
+            stream << "\n\n";
         }
     }
 
-    extract_text_nodes(node->children, ss);
-    extract_text_nodes(node->next, ss);
+    extract_text_nodes(node->children, stream);
+    extract_text_nodes(node->next, stream);
 }
 }  // namespace
 

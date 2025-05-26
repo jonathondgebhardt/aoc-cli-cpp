@@ -1,3 +1,5 @@
+#include <cctype>
+#include <cstddef>
 #include <iostream>
 
 #include "aoc-cli/Printer.hpp"

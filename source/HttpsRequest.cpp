@@ -1,7 +1,14 @@
+#include <cstddef>
 #include <format>
 #include <stdexcept>
+#include <utility>
 
 #include "aoc-cli/HttpsRequest.hpp"
+
+#include <curl/curl.h>
+#include <curl/easy.h>
+
+#include "aoc-cli/HtmlContent.hpp"
 
 namespace
 {
