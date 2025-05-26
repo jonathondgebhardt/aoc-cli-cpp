@@ -1,8 +1,8 @@
-set(aoc-cli-cpp_FOUND YES)
+set(aoc-cli_FOUND YES)
 
 include(CMakeFindDependencyMacro)
 find_dependency(fmt)
 
-if(aoc-cli-cpp_FOUND)
-  include("${CMAKE_CURRENT_LIST_DIR}/aoc-cli-cppTargets.cmake")
+if(aoc-cli_FOUND)
+  include("${CMAKE_CURRENT_LIST_DIR}/aoc-cliTargets.cmake")
 endif()

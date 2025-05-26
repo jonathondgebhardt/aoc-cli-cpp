@@ -5,13 +5,13 @@
 # Targets necessary to build the project must be provided unconditionally, so
 # consumers can trivially build and package the project
 if(PROJECT_IS_TOP_LEVEL)
-  option(aoc-cli-cpp_DEVELOPER_MODE "Enable developer mode" OFF)
+  option(aoc-cli_DEVELOPER_MODE "Enable developer mode" OFF)
   option(BUILD_SHARED_LIBS "Build shared libs." OFF)
 endif()
 
 # ---- Suppress C4251 on Windows ----
 
-# Please see include/aoc-cli-cpp/aoc-cli-cpp.hpp for more details
+# Please see include/aoc-cli/aoc-cli.hpp for more details
 set(pragma_suppress_c4251 "
 /* This needs to suppress only for MSVC */
 #if defined(_MSC_VER) && !defined(__ICL)
@@ -30,12 +30,12 @@ set(pragma_suppress_c4251 "
 set(warning_guard "")
 if(NOT PROJECT_IS_TOP_LEVEL)
   option(
-      aoc-cli-cpp_INCLUDES_WITH_SYSTEM
-      "Use SYSTEM modifier for aoc-cli-cpp's includes, disabling warnings"
+      aoc-cli_INCLUDES_WITH_SYSTEM
+      "Use SYSTEM modifier for aoc-cli's includes, disabling warnings"
       ON
   )
-  mark_as_advanced(aoc-cli-cpp_INCLUDES_WITH_SYSTEM)
-  if(aoc-cli-cpp_INCLUDES_WITH_SYSTEM)
+  mark_as_advanced(aoc-cli_INCLUDES_WITH_SYSTEM)
+  if(aoc-cli_INCLUDES_WITH_SYSTEM)
     set(warning_guard SYSTEM)
   endif()
 endif()

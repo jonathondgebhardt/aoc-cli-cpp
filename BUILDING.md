@@ -65,18 +65,18 @@ cmake --install build --config Release
 This project exports a CMake package to be used with the [`find_package`][3]
 command of CMake:
 
-* Package name: `aoc-cli-cpp`
-* Target name: `aoc-cli-cpp::aoc-cli-cpp`
+* Package name: `aoc-cli`
+* Target name: `aoc-cli::aoc-cli`
 
 Example usage:
 
 ```cmake
-find_package(aoc-cli-cpp REQUIRED)
+find_package(aoc-cli REQUIRED)
 # Declare the imported target as a build requirement using PRIVATE, where
 # project_target is a target created in the consuming project
 target_link_libraries(
     project_target PRIVATE
-    aoc-cli-cpp::aoc-cli-cpp
+    aoc-cli::aoc-cli
 )
 ```
 

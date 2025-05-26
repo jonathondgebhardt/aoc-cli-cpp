@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(aoc-cli-cppTests LANGUAGES CXX)
+project(aoc-cliTests LANGUAGES CXX)
 
 include(../cmake/project-is-top-level.cmake)
 include(../cmake/folders.cmake)
@@ -8,7 +8,7 @@ include(../cmake/folders.cmake)
 # ---- Dependencies ----
 
 if(PROJECT_IS_TOP_LEVEL)
-  find_package(aoc-cli-cpp REQUIRED)
+  find_package(aoc-cli REQUIRED)
   enable_testing()
 endif()
 
@@ -17,15 +17,15 @@ include(Catch)
 
 # ---- Tests ----
 
-add_executable(aoc-cli-cpp_test source/aoc-cli-cpp_test.cpp)
+add_executable(aoc-cli_test source/aoc-cli_test.cpp)
 target_link_libraries(
-    aoc-cli-cpp_test PRIVATE
-    aoc-cli-cpp::aoc-cli-cpp
+    aoc-cli_test PRIVATE
+    aoc-cli::aoc-cli
     Catch2::Catch2WithMain
 )
-target_compile_features(aoc-cli-cpp_test PRIVATE cxx_std_20)
+target_compile_features(aoc-cli_test PRIVATE cxx_std_23)
 
-catch_discover_tests(aoc-cli-cpp_test)
+catch_discover_tests(aoc-cli_test)
 
 # ---- End-of-file commands ----
 

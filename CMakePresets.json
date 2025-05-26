@@ -10,7 +10,7 @@
       "name": "dev-mode",
       "hidden": true,
       "cacheVariables": {
-        "aoc-cli-cpp_DEVELOPER_MODE": "ON",
+        "aoc-cli_DEVELOPER_MODE": "ON",
         "VCPKG_MANIFEST_FEATURES": "test"
       }
     },
@@ -48,7 +48,7 @@
       "hidden": true,
       "cacheVariables": {
         "CMAKE_CXX_EXTENSIONS": "OFF",
-        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_STANDARD": "23",
         "CMAKE_CXX_STANDARD_REQUIRED": "ON"
       }
     },

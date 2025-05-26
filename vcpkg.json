@@ -1,5 +1,5 @@
 {
-  "name": "aoc-cli-cpp",
+  "name": "aoc-cli",
   "version-semver": "0.1.0",
   "dependencies": [
     "curl",
