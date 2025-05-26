@@ -17,13 +17,13 @@ include(cmake/variables.cmake)
 
 add_library(
     aoc-cli_aoc-cli
-    source/main.cpp
-    source/client/Client.cpp
-    source/client/HtmlContent.cpp
-    source/client/HtmlFormatter.cpp
-    source/client/HttpsRequest.cpp
-    source/client/Printer.cpp
-    source/client/RequestManager.cpp
+    #source/main.cpp
+    source/Client.cpp
+    source/HtmlContent.cpp
+    source/HtmlFormatter.cpp
+    source/HttpsRequest.cpp
+    source/Printer.cpp
+    source/RequestManager.cpp
 )
 add_library(aoc-cli::aoc-cli ALIAS aoc-cli_aoc-cli)
 

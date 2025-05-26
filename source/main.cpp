@@ -1,8 +1,10 @@
+#include <cstdint>
 #include <cstdlib>
-#include <cxxopts.hpp>
-#include <filesystem>
-#include <fstream>
+#include <exception>
 #include <iostream>
+#include <string>
+
+#include <cxxopts.hpp>
 
 #include "client/Client.hpp"
 #include "client/Printer.hpp"
@@ -11,7 +13,8 @@
 
 // void ValidateYear()
 // {
-//     if(const auto year = std::stoi(YEAR); year < 2015 || year > std::stoi(GetCurrentYear()))
+//     if(const auto year = std::stoi(YEAR); year < 2015 || year >
+//     std::stoi(GetCurrentYear()))
 //     {
 //         throw std::runtime_error(std::format("invalid year: {}", year));
 //     }
@@ -25,15 +28,15 @@
 //     }
 // }
 
-int main(const int argc, char** argv)
+auto main(const int argc, char** argv) -> int
 {
-    try
-    {
-        // TODO: Add a brief description
-        cxxopts::Options options{"aoc-cli", "A command line utility for Advent of Code"};
+  try {
+    // TODO: Add a brief description
+    cxxopts::Options options {"aoc-cli",
+                              "A command line utility for Advent of Code"};
 
-        // TODO: Don't blatantly copy+paste from rust aoc-cli :(
-        // clang-format off
+    // TODO: Don't blatantly copy+paste from rust aoc-cli :(
+    // clang-format off
         options.add_options()
             ("command", std::string(), cxxopts::value<std::string>()->default_value("read"))
             ("command_option", std::string(), cxxopts::value<std::string>())
@@ -70,118 +73,98 @@ int main(const int argc, char** argv)
                     "  private-leaderboard LEADERBOARD_ID     Show the state of a private leaderboard\n\n"
             "Options:"
         );
-        // clang-format on
+    // clang-format on
 
-        const auto result = options.parse(argc, argv);
+    const auto result = options.parse(argc, argv);
 
-        if(result.count("help"))
-        {
-            std::cout << options.help() << "\n";
-            return EXIT_SUCCESS;
-        }
-
-        if(result["version"].count())
-        {
-            // TODO: Come up with a better versioning scheme. Would like to include date.
-            std::cout << argv[0] << " v0.1\n";
-            return EXIT_SUCCESS;
-        }
-
-        const auto command = result["command"].as<std::string>();
-
-        RequestManager::Instance().setSessionFile(result["session-file"].as<std::string>());
-
-        Client client;
-        client.setBaseUrl("https://adventofcode.com");
-        client.setPrinter(Printer{result["width"].as<std::uint16_t>()});
-        client.setYear(result["year"].as<std::string>());
-        // ValidateYear();
-        client.setDay(result["day"].as<std::string>());
-        // ValidateDay();
-
-        if(command == "read" || command == "download")
-        {
-            Client::DownloadConfig config;
-
-            // TODO: Implement part support
-            if(result["input-only"].count() && result["input-only"].as<bool>())
-            {
-                config.mDownloadInput = true;
-                config.mReadInput = command == "read";
-            }
-            else if(result["sample-only"].count() && result["sample-only"].as<bool>())
-            {
-                config.mDownloadSampleInput = true;
-                config.mReadSampleInput = command == "read";
-            }
-            else if(result["puzzle-only"].count() && result["puzzle-only"].as<bool>())
-            {
-                config.mDownloadPuzzle = true;
-                config.mReadPuzzle = command == "read";
-            }
-            else
-            {
-                config.mDownloadInput = true;
-                config.mDownloadPuzzle = true;
-                config.mDownloadSampleInput = true;
-
-                // Only read the puzzle by default. The puzzle input is usually huge and the sample
-                // input is contained in the puzzle.
-                config.mReadPuzzle = command == "read";
-            }
-
-            client.download(config);
-        }
-        else if(command == "calendar")
-        {
-            // The calendar is only 6 columns wide due to the way I format it. Don't impose a width
-            // because that would make it confusing.
-            client.calendar();
-        }
-        else if(command == "submit")
-        {
-            const auto answer = result["command_option"].as<std::string>();
-            const auto part = result["part"].as<std::string>();
-            client.setAnswer(answer);
-            client.setPart(part);
-            client.submit();
-        }
-        else if(command == "private-leaderboard")
-        {
-            // TODO: Validate leaderboard id.
-            const auto leaderboardId = result["command_option"].as<std::string>();
-            client.setPrivateLeaderboardId(leaderboardId);
-            client.privateLeaderboard();
-        }
-        else
-        {
-            std::cerr << "Unrecognized command '" << command << "'\n";
-            std::cout << options.help() << "\n";
-            return EXIT_FAILURE;
-        }
-
-        return EXIT_SUCCESS;
-    }
-    catch(cxxopts::exceptions::parsing& e)
-    {
-        std::cerr << "Error parsing arguments: " << e.what() << "\n";
-    }
-    catch(cxxopts::exceptions::specification& e)
-    {
-        std::cerr << "Error defining options: " << e.what() << "\n";
-    }
-    catch(cxxopts::exceptions::exception& e)
-    {
-        std::cerr << "Error : " << e.what() << "\n";
-    }
-    catch(std::exception& e)
-    {
-        std::cerr << "Error : " << e.what() << "\n";
-    }
-    catch(...)
-    {
-        std::cerr << "Unknown exception\n";
+    if (result.count("help") != 0U) {
+      std::cout << options.help() << "\n";
+      return EXIT_SUCCESS;
     }
 
-    return EXIT_FAILURE;
+    if (result["version"].count() != 0U) {
+      // TODO: Come up with a better versioning scheme. Would like to include
+      // date.
+      std::cout << argv[0] << " v0.1\n";
+      return EXIT_SUCCESS;
+    }
+
+    const auto command = result["command"].as<std::string>();
+
+    RequestManager::Instance().setSessionFile(
+        result["session-file"].as<std::string>());
+
+    Client client;
+    client.setBaseUrl("https://adventofcode.com");
+    client.setPrinter(Printer {result["width"].as<std::uint16_t>()});
+    client.setYear(result["year"].as<std::string>());
+    // ValidateYear();
+    client.setDay(result["day"].as<std::string>());
+    // ValidateDay();
+
+    if (command == "read" || command == "download") {
+      Client::DownloadConfig config;
+
+      // TODO: Implement part support
+      if ((result["input-only"].count() != 0U)
+          && result["input-only"].as<bool>())
+      {
+        config.mDownloadInput = true;
+        config.mReadInput = command == "read";
+      } else if ((result["sample-only"].count() != 0U)
+                 && result["sample-only"].as<bool>())
+      {
+        config.mDownloadSampleInput = true;
+        config.mReadSampleInput = command == "read";
+      } else if ((result["puzzle-only"].count() != 0U)
+                 && result["puzzle-only"].as<bool>())
+      {
+        config.mDownloadPuzzle = true;
+        config.mReadPuzzle = command == "read";
+      } else {
+        config.mDownloadInput = true;
+        config.mDownloadPuzzle = true;
+        config.mDownloadSampleInput = true;
+
+        // Only read the puzzle by default. The puzzle input is usually huge and
+        // the sample input is contained in the puzzle.
+        config.mReadPuzzle = command == "read";
+      }
+
+      client.download(config);
+    } else if (command == "calendar") {
+      // The calendar is only 6 columns wide due to the way I format it. Don't
+      // impose a width because that would make it confusing.
+      client.calendar();
+    } else if (command == "submit") {
+      const auto answer = result["command_option"].as<std::string>();
+      const auto part = result["part"].as<std::string>();
+      client.setAnswer(answer);
+      client.setPart(part);
+      client.submit();
+    } else if (command == "private-leaderboard") {
+      // TODO: Validate leaderboard id.
+      const auto leaderboard_id = result["command_option"].as<std::string>();
+      client.setPrivateLeaderboardId(leaderboard_id);
+      client.privateLeaderboard();
+    } else {
+      std::cerr << "Unrecognized command '" << command << "'\n";
+      std::cout << options.help() << "\n";
+      return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+  } catch (cxxopts::exceptions::parsing& e) {
+    std::cerr << "Error parsing arguments: " << e.what() << "\n";
+  } catch (cxxopts::exceptions::specification& e) {
+    std::cerr << "Error defining options: " << e.what() << "\n";
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << "Error : " << e.what() << "\n";
+  } catch (std::exception& e) {
+    std::cerr << "Error : " << e.what() << "\n";
+  } catch (...) {
+    std::cerr << "Unknown exception\n";
+  }
+
+  return EXIT_FAILURE;
 }
