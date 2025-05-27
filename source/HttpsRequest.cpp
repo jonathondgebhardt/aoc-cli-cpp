@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <stdexcept>
 #include <utility>
@@ -16,7 +17,8 @@ namespace
 auto write_callback(void* contents, size_t size, size_t nmemb, void* userp)
     -> size_t
 {
-    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    static_cast<std::string*>(userp)->append(static_cast<char*>(contents),
+                                             size * nmemb);
     return size * nmemb;
 }
 }  // namespace

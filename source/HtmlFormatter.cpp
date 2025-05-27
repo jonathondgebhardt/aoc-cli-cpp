@@ -1,6 +1,10 @@
+#include <sstream>
+#include <string>
+
 #include "aoc-cli/HtmlFormatter.hpp"
 
 #include <libxml/HTMLparser.h>
+#include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/xmlstring.h>
 

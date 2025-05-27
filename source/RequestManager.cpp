@@ -17,17 +17,8 @@
 
 #include "aoc-cli/HtmlContent.hpp"
 #include "aoc-cli/HtmlFormatter.hpp"
-
-#ifndef WIN32
-#    include <unistd.h>
-#endif
-
-#include <curl/curl.h>
-
 #include "aoc-cli/HttpsRequest.hpp"
 #include "aoc-cli/System.hpp"
-
-using std::chrono::seconds;
 
 namespace
 {
@@ -151,7 +142,7 @@ auto request_manager::do_request(https_request& request) const -> html_content
             "perform HTTPS " "request ({} seconds)",
             wait_time.value());
         std::this_thread::sleep_for(
-            seconds(static_cast<std::int64_t>(wait_time.value())));
+            std::chrono::seconds(static_cast<std::int64_t>(wait_time.value())));
     }
 
     touch_file(m_bookkeeping_file);

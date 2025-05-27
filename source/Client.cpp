@@ -12,6 +12,7 @@
 
 #include "aoc-cli/HtmlFormatter.hpp"
 #include "aoc-cli/HttpsRequest.hpp"
+#include "aoc-cli/Printer.hpp"
 #include "aoc-cli/RequestManager.hpp"
 
 void client::calendar() const
@@ -63,8 +64,7 @@ void client::calendar() const
 
     std::stringstream stream;
     for (auto day = 1; const auto& stars : day_status) {
-        // TODO: Should I be doing stream << ?
-        std::cout << std::setw(2) << day << ": " << stars << "\n";
+        stream << std::setw(2) << day << ": " << stars << "\n";
         ++day;
     }
 
@@ -93,8 +93,7 @@ void client::download(const download_config& config)
         download_puzzle_sample_input();
     }
 
-    // FIXME: not sure what this is meant to be doing
-    read_downloads = read_downloads;
+    m_read_downloads = read_downloads;
 }
 
 void client::download_puzzle_input()
