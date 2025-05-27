@@ -83,10 +83,12 @@ static auto get_system_time() -> std::tm
 static auto get_current_year() -> std::string
 {
     const auto time = get_system_time();
-    auto current_year = 1900 + time.tm_year;
+    const auto offset = 1900;
+    auto current_year = time.tm_year + offset;
 
     // AoC starts December 1st. If it's not December yet, use last year.
-    if (time.tm_mon < 11) {
+    constexpr auto november = 11;
+    if (time.tm_mon < november) {
         --current_year;
     }
 
@@ -99,4 +101,3 @@ static auto get_current_day() -> std::string
 {
     return {std::to_string(get_system_time().tm_mday)};
 }
-
