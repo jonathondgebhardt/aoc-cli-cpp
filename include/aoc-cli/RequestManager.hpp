@@ -62,8 +62,7 @@ private:
 
     std::string m_session_cookie;
     std::string m_download_prefix{".aoc-cli"};
-    std::string m_bookkeeping_file{
-        std::format("{}/{}/.lastgetrequest", get_home_path(), m_download_prefix)};
+    std::string m_bookkeeping_file{std::format(
+        "{}/{}/.lastgetrequest", get_home_path(), m_download_prefix)};
     double m_wait_time{3.0};
 };
-

@@ -99,4 +99,3 @@ private:
     std::string m_part;  // TODO: I only need a single bit to represent this.
     bool m_read_downloads{false};
 };
-
