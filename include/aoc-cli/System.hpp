@@ -95,8 +95,8 @@ static auto get_current_year() -> std::string
     return std::to_string(current_year);
 }
 
-// FIXME: This should be getting the last unlocked day. Not sure if I wanna make
-// an HTTPS request just for that though.
+// FIXME: This should be getting the last unlocked day. Not sure if I want to
+// make an HTTPS request just for that though.
 static auto get_current_day() -> std::string
 {
     return {std::to_string(get_system_time().tm_mday)};
