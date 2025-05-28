@@ -159,7 +159,7 @@ void client::download_puzzle_sample_input()
     {
         // Don't enforce a width on input because that changes the meaning of
         // the input.
-        printer printer{html_formatter{content}()};
+        const printer printer{html_formatter{content}()};
         printer();
     }
 }
