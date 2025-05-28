@@ -2,9 +2,11 @@
 
 #include <string>
 
+#include "aoc-cli/aoc-cli_export.hpp"
+
 //! \brief Extracts content from HTML between a beginning and end tag. Example:
 //! <main> and </main>. Extracted content can be accessed via operator().
-class html_content
+class AOC_CLI_EXPORT html_content
 {
 public:
     //! \brief No extraction needs to happen, accept content as is.
@@ -45,7 +47,7 @@ public:
     auto extracted() const -> std::string { return m_extracted_content; }
 
 private:
-    // TODO: Use std::string_view?
+    AOC_CLI_CPP_SUPPRESS_C4251
     std::string m_content;
     std::string m_extracted_content;
     std::string m_begin;

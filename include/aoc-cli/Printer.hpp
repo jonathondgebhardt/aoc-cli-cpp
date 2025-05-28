@@ -4,10 +4,12 @@
 #include <optional>
 #include <string>
 
+#include "aoc-cli/aoc-cli_export.hpp"
+
 //! \brief Prints some text to the screen.
 //! If a width is set, hopefully inserts new lines intelligently so long lines
 //! look nice.
-class printer
+class AOC_CLI_EXPORT printer
 {
 public:
     //! \param width The width to enforce.
@@ -38,6 +40,7 @@ public:
     void operator()() const;
 
 private:
+    AOC_CLI_CPP_SUPPRESS_C4251
     std::string m_content;
     std::optional<std::uint16_t> m_width;
 };

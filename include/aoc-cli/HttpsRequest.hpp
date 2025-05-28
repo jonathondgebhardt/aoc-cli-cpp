@@ -5,10 +5,11 @@
 
 #include <curl/curl.h>
 
-#include "HtmlContent.hpp"
+#include "aoc-cli/HtmlContent.hpp"
+#include "aoc-cli/aoc-cli_export.hpp"
 
 //! \brief Performs HTTPS requests.
-class https_request
+class AOC_CLI_EXPORT https_request
 {
 public:
     https_request();
@@ -74,6 +75,7 @@ protected:
     CURL* m_curl = nullptr;
 
 private:
+    AOC_CLI_CPP_SUPPRESS_C4251
     std::string m_base_url;
     std::string m_page;
     std::string m_read_buffer;

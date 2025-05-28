@@ -3,13 +3,14 @@
 #include <cstdint>
 #include <string>
 
-#include "Printer.hpp"
+#include "aoc-cli/Printer.hpp"
+#include "aoc-cli/aoc-cli_export.hpp"
 
 // Basically all functionality from main.cpp should be here besides argument
 // parsing. Additional members should be added to facilitate testing, such as
 // base url.
 
-class client
+class AOC_CLI_EXPORT client
 {
 public:
     //! \brief Print the calendar showing puzzle status.
@@ -87,6 +88,7 @@ public:
     }
 
 private:
+    AOC_CLI_CPP_SUPPRESS_C4251
     printer m_printer;
     std::string m_base_url;
     std::string m_session_file;

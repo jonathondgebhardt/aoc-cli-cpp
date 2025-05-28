@@ -4,11 +4,13 @@
 #include <stdexcept>
 #include <string>
 
+#include "aoc-cli/aoc-cli_export.hpp"
+
 #ifdef WIN32
 #    include <processenv.h>
 #endif
 
-static auto get_home_path() -> std::string
+static AOC_CLI_EXPORT auto get_home_path() -> std::string
 {
 #ifdef WIN32
     // Here lies my failed attempts at using a non-deprecated function. I
@@ -61,7 +63,7 @@ static auto get_home_path() -> std::string
 #endif
 }
 
-static auto get_system_time() -> std::tm
+static auto AOC_CLI_EXPORT get_system_time() -> std::tm
 {
     // https://stackoverflow.com/a/58153628
     const std::time_t time = std::time(nullptr);
@@ -80,7 +82,7 @@ static auto get_system_time() -> std::tm
 
 // If year is not provided, assume it's this year or the previous year's AoC if
 // it's not yet December.
-static auto get_current_year() -> std::string
+static auto AOC_CLI_EXPORT get_current_year() -> std::string
 {
     const auto time = get_system_time();
     const auto offset = 1900;
@@ -97,7 +99,7 @@ static auto get_current_year() -> std::string
 
 // FIXME: This should be getting the last unlocked day. Not sure if I want to
 // make an HTTPS request just for that though.
-static auto get_current_day() -> std::string
+static auto AOC_CLI_EXPORT get_current_day() -> std::string
 {
     return {std::to_string(get_system_time().tm_mday)};
 }

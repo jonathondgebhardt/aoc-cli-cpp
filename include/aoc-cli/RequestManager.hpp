@@ -6,13 +6,14 @@
 
 #include <curl/curl.h>
 
-#include "HttpsRequest.hpp"
-#include "System.hpp"
+#include "aoc-cli/HttpsRequest.hpp"
+#include "aoc-cli/System.hpp"
+#include "aoc-cli/aoc-cli_export.hpp"
 
 //! \brief Manages making HTTPS requests to Advent of Code.
 //! Subsequent requests will be delayed in an attempt to avoid spamming Advent
-//! of COde.
-class request_manager
+//! of Code.
+class AOC_CLI_EXPORT request_manager
 {
 public:
     static auto instance() -> request_manager&
@@ -60,6 +61,7 @@ private:
 
     auto get_time_to_wait() const -> std::optional<double>;
 
+    AOC_CLI_CPP_SUPPRESS_C4251
     std::string m_session_cookie;
     std::string m_download_prefix{".aoc-cli"};
     std::string m_bookkeeping_file{std::format(

@@ -2,10 +2,11 @@
 
 #include <sstream>
 
-#include "HtmlContent.hpp"
+#include "aoc-cli/HtmlContent.hpp"
+#include "aoc-cli/aoc-cli_export.hpp"
 
 //! \brief Extracts all plain text from HtmlContent and attempts to format it.
-class html_formatter
+class AOC_CLI_EXPORT html_formatter
 {
 public:
     explicit html_formatter(const html_content& content)
@@ -39,6 +40,7 @@ public:
     }
 
 private:
+    AOC_CLI_CPP_SUPPRESS_C4251
     //! \brief Extracts plain text from the HTML content.
     //! \param html The valid HTML content.
     void extract_content(const std::string& html);
