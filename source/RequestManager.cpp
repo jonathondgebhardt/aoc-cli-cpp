@@ -160,7 +160,10 @@ auto request_manager::get_time_to_wait() const -> std::optional<double>
         return std::nullopt;
     }
 
-    struct stat file_stat{};
+    struct stat file_stat
+    {
+    };
+
     if (const auto res = stat(m_bookkeeping_file.c_str(), &file_stat); res != 0)
     {
         throw std::runtime_error(std::format(

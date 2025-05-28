@@ -34,8 +34,8 @@ public:
 
     auto extract() -> std::string;
 
-    auto extract(const std::string& begin, const std::string& end)
-        -> html_content
+    auto extract(const std::string& begin,
+                 const std::string& end) -> html_content
     {
         return html_content{extract(), begin, end};
     }

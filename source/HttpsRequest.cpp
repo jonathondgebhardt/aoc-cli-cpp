@@ -14,8 +14,10 @@
 namespace
 {
 // https://stackoverflow.com/questions/9786150/save-curl-content-result-into-a-string-in-c
-auto write_callback(void* contents, size_t size, size_t nmemb, void* userp)
-    -> size_t
+auto write_callback(void* contents,
+                    size_t size,
+                    size_t nmemb,
+                    void* userp) -> size_t
 {
     static_cast<std::string*>(userp)->append(static_cast<char*>(contents),
                                              size * nmemb);
