@@ -26,7 +26,8 @@ void client::calendar() const
     const auto content = request_manager::instance().do_request(request);
     const auto& html = content.extracted();
 
-    std::array<std::string, 25> day_status;
+    constexpr auto christmas_day = 25;
+    std::array<std::string, christmas_day> day_status;
     const std::regex days{"class=\"calendar-day(\\d{1,2})(\\s?.*?)\">"};
     for (auto i = std::sregex_iterator(html.begin(), html.end(), days),
               end = std::sregex_iterator();
@@ -41,7 +42,7 @@ void client::calendar() const
 
         const auto day_number =
             static_cast<std::size_t>(std::stoi(match[1].str())) - 1;
-        if (day_number > 25) {
+        if (day_number > christmas_day) {
             throw std::runtime_error(
                 std::format("unexpected day number: {}", day_number));
         }
@@ -59,7 +60,7 @@ void client::calendar() const
             return {};
         }();
 
-        day_status[day_number] = stars;
+        day_status.at(day_number) = stars;
     }
 
     std::stringstream stream;

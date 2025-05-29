@@ -72,10 +72,9 @@ protected:
     //! \brief Use POST.
     void use_post() const;
 
-    CURL* m_curl = nullptr;
-
 private:
     AOC_CLI_CPP_SUPPRESS_C4251
+    CURL* m_curl = nullptr;
     std::string m_base_url;
     std::string m_page;
     std::string m_read_buffer;
